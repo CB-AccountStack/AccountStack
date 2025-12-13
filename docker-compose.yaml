@@ -45,6 +45,9 @@ services:
       - CLOUDBEES_FM_ENVIRONMENT=${CLOUDBEES_FM_ENVIRONMENT:-dev}
       - DATA_PATH=/data/seed
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-change-in-production}
+      - AUTH_USERNAME=${AUTH_USERNAME:-demo@accountstack.com}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-demo123}
     networks:
       - accountstack-network
     restart: unless-stopped
@@ -74,6 +77,7 @@ services:
       - CLOUDBEES_FM_ENVIRONMENT=${CLOUDBEES_FM_ENVIRONMENT:-dev}
       - DATA_PATH=/data/seed
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-change-in-production}
     networks:
       - accountstack-network
     restart: unless-stopped
@@ -103,6 +107,7 @@ services:
       - CLOUDBEES_FM_ENVIRONMENT=${CLOUDBEES_FM_ENVIRONMENT:-dev}
       - DATA_PATH=/data/seed
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-change-in-production}
     networks:
       - accountstack-network
     restart: unless-stopped

@@ -1,6 +1,7 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CreditCard, TrendingUp, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, CreditCard, TrendingUp, Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,7 +9,14 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -64,11 +72,21 @@ export default function Layout({ children }: LayoutProps) {
             {/* User Menu */}
             <div className="hidden md:flex items-center space-x-4">
               <div className="text-sm text-gray-600">
-                Demo User
+                {user?.name || user?.email}
               </div>
               <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center">
-                <span className="text-brand-600 font-medium text-sm">DU</span>
+                <span className="text-brand-600 font-medium text-sm">
+                  {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                </span>
               </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
             </div>
 
             {/* Mobile menu button */}
@@ -108,6 +126,16 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                 );
               })}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Logout</span>
+              </button>
             </nav>
           </div>
         )}

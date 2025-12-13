@@ -78,6 +78,7 @@ func main() {
 	healthHandler := handlers.NewHealthHandler()
 	userHandler := handlers.NewUserHandler(userService, logger)
 	accountHandler := handlers.NewAccountHandler(accountService, logger)
+	authHandler := handlers.NewAuthHandler(logger)
 
 	// Setup router
 	router := mux.NewRouter()
@@ -91,6 +92,7 @@ func main() {
 
 	// Register routes
 	router.Handle("/healthz", healthHandler).Methods("GET")
+	router.HandleFunc("/login", authHandler.Login).Methods("POST")
 	router.HandleFunc("/me", userHandler.GetMe).Methods("GET")
 	router.HandleFunc("/accounts", accountHandler.GetAccounts).Methods("GET")
 	router.HandleFunc("/accounts/{id}", accountHandler.GetAccountByID).Methods("GET")
@@ -111,10 +113,11 @@ func main() {
 	go func() {
 		logger.Infof("Server listening on port %s", port)
 		logger.Info("API Endpoints:")
-		logger.Info("  GET /healthz - Health check")
-		logger.Info("  GET /me - Current user info")
-		logger.Info("  GET /accounts - List user accounts")
-		logger.Info("  GET /accounts/{id} - Get account by ID")
+		logger.Info("  GET  /healthz - Health check")
+		logger.Info("  POST /login - User login")
+		logger.Info("  GET  /me - Current user info")
+		logger.Info("  GET  /accounts - List user accounts")
+		logger.Info("  GET  /accounts/{id} - Get account by ID")
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.WithError(err).Fatal("Server failed to start")

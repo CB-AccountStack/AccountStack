@@ -1,0 +1,160 @@
+# Default values for accountstack
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# Authentication configuration
+auth:
+  # JWT secret for token signing (MUST be changed in production)
+  jwtSecret: "dev-secret-key-change-in-production-use-a-long-random-string"
+  # Demo credentials (change in production)
+  username: "demo@accountstack.com"
+  password: "demo123"
+
+# CloudBees Feature Management
+cloudbees:
+  apiKey: "dev-mode"
+  environment: "production"
+
+# Web UI (React)
+web:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: accountstack/web
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    hosts:
+      - host: accountstack.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: accountstack-tls
+        hosts:
+          - accountstack.example.com
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Accounts API (Go)
+apiAccounts:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: accountstack/api-accounts
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8001
+    targetPort: 8001
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 8001
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: 8001
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Transactions API (Go)
+apiTransactions:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: accountstack/api-transactions
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8002
+    targetPort: 8002
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 8002
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: 8002
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Insights API (Go)
+apiInsights:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: accountstack/api-insights
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8003
+    targetPort: 8003
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 8003
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: 8003
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Node selector for scheduling pods
+nodeSelector: {}
+
+# Tolerations for scheduling pods
+tolerations: []
+
+# Affinity rules for scheduling pods
+affinity: {}
