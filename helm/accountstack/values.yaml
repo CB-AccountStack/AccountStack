@@ -24,6 +24,8 @@ cloudbees:
 web:
   enabled: true
   replicaCount: 2
+  # Show demo credentials on login page (set to false in production)
+  showDemoCredentials: false
   image:
     repository: accountstack/web
     pullPolicy: IfNotPresent

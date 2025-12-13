@@ -103,18 +103,20 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Demo Credentials Info */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center mb-2">Demo Credentials:</p>
-            <div className="bg-gray-50 rounded-lg p-3 text-sm">
-              <p className="text-gray-700 font-mono">
-                <span className="text-gray-500">Email:</span> demo@accountstack.com
-              </p>
-              <p className="text-gray-700 font-mono">
-                <span className="text-gray-500">Password:</span> demo123
-              </p>
+          {/* Demo Credentials Info - Only shown in development */}
+          {import.meta.env.VITE_SHOW_DEMO_CREDENTIALS === 'true' && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-sm text-gray-600 text-center mb-2">Demo Credentials:</p>
+              <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                <p className="text-gray-700 font-mono">
+                  <span className="text-gray-500">Email:</span> demo@accountstack.com
+                </p>
+                <p className="text-gray-700 font-mono">
+                  <span className="text-gray-500">Password:</span> demo123
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
