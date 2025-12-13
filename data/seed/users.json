@@ -1,0 +1,20 @@
+[
+  {
+    "id": "user-001",
+    "email": "demo@accountstack.com",
+    "name": "Demo User",
+    "firstName": "Demo",
+    "lastName": "User",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "lastLogin": "2024-12-13T08:30:00Z"
+  },
+  {
+    "id": "user-002",
+    "email": "sarah.chen@accountstack.com",
+    "name": "Sarah Chen",
+    "firstName": "Sarah",
+    "lastName": "Chen",
+    "createdAt": "2023-06-20T14:22:00Z",
+    "lastLogin": "2024-12-12T18:45:00Z"
+  }
+]
