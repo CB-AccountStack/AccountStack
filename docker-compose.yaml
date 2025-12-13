@@ -1,0 +1,139 @@
+version: '3.9'
+
+services:
+  # ============================================================================
+  # Web UI (React + Vite)
+  # ============================================================================
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: development
+    container_name: accountstack-web
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_ACCOUNTS_URL=http://localhost:8001
+      - VITE_API_TRANSACTIONS_URL=http://localhost:8002
+      - VITE_API_INSIGHTS_URL=http://localhost:8003
+      - VITE_CLOUDBEES_FM_API_KEY=${CLOUDBEES_FM_API_KEY}
+      - VITE_CLOUDBEES_FM_ENVIRONMENT=${CLOUDBEES_FM_ENVIRONMENT:-dev}
+    depends_on:
+      - api-accounts
+      - api-transactions
+      - api-insights
+    networks:
+      - accountstack-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # Accounts API (Go)
+  # ============================================================================
+  api-accounts:
+    build:
+      context: ./apps/api-accounts
+      dockerfile: Dockerfile
+      target: development
+    container_name: accountstack-api-accounts
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./apps/api-accounts:/app
+      - ./data/seed:/data/seed:ro
+    environment:
+      - GO_ENV=development
+      - PORT=8001
+      - CLOUDBEES_FM_API_KEY=${CLOUDBEES_FM_API_KEY}
+      - CLOUDBEES_FM_ENVIRONMENT=${CLOUDBEES_FM_ENVIRONMENT:-dev}
+      - DATA_PATH=/data/seed
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    networks:
+      - accountstack-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # Transactions API (Go)
+  # ============================================================================
+  api-transactions:
+    build:
+      context: ./apps/api-transactions
+      dockerfile: Dockerfile
+      target: development
+    container_name: accountstack-api-transactions
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./apps/api-transactions:/app
+      - ./data/seed:/data/seed:ro
+    environment:
+      - GO_ENV=development
+      - PORT=8002
+      - CLOUDBEES_FM_API_KEY=${CLOUDBEES_FM_API_KEY}
+      - CLOUDBEES_FM_ENVIRONMENT=${CLOUDBEES_FM_ENVIRONMENT:-dev}
+      - DATA_PATH=/data/seed
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    networks:
+      - accountstack-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # Insights API (Go)
+  # ============================================================================
+  api-insights:
+    build:
+      context: ./apps/api-insights
+      dockerfile: Dockerfile
+      target: development
+    container_name: accountstack-api-insights
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./apps/api-insights:/app
+      - ./data/seed:/data/seed:ro
+    environment:
+      - GO_ENV=development
+      - PORT=8003
+      - CLOUDBEES_FM_API_KEY=${CLOUDBEES_FM_API_KEY}
+      - CLOUDBEES_FM_ENVIRONMENT=${CLOUDBEES_FM_ENVIRONMENT:-dev}
+      - DATA_PATH=/data/seed
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    networks:
+      - accountstack-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  accountstack-network:
+    name: accountstack-network
+    driver: bridge
+
+# ============================================================================
+# Volumes (for persistence if needed in the future)
+# ============================================================================
+volumes:
+  data-seed:
+    name: accountstack-data-seed
