@@ -6,7 +6,6 @@ import type {
   Transaction,
   Insight,
   ApiResponse,
-  PaginatedResponse,
 } from '../types';
 
 // Create axios instance with base configuration
