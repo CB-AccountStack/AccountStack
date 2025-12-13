@@ -10,6 +10,6 @@ require (
 )
 
 require (
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/hashicorp/go-version v1.3.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 )
