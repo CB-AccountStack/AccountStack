@@ -46,14 +46,16 @@ func (s *AccountService) GetAccountByID(accountID string, userID string) (*model
 		return nil, fmt.Errorf("unauthorized")
 	}
 
-	// Apply masking based on feature flag
+	// Apply masking and currency based on feature flags
 	maskAmounts := s.flags.ShouldMaskAmounts()
+	currency := s.flags.GetCurrency()
 	s.logger.WithFields(logrus.Fields{
 		"accountId":   accountID,
 		"maskAmounts": maskAmounts,
+		"currency":    currency,
 	}).Debug("Retrieving account")
 
-	response := account.ToResponse(maskAmounts)
+	response := account.ToResponse(maskAmounts, currency)
 	return &response, nil
 }
 
@@ -65,17 +67,19 @@ func (s *AccountService) GetAccountsByUserID(userID string) ([]models.AccountRes
 		return nil, err
 	}
 
-	// Apply masking based on feature flag
+	// Apply masking and currency based on feature flags
 	maskAmounts := s.flags.ShouldMaskAmounts()
+	currency := s.flags.GetCurrency()
 	s.logger.WithFields(logrus.Fields{
 		"userId":      userID,
 		"count":       len(accounts),
 		"maskAmounts": maskAmounts,
+		"currency":    currency,
 	}).Debug("Retrieving accounts")
 
 	responses := make([]models.AccountResponse, len(accounts))
 	for i, account := range accounts {
-		responses[i] = account.ToResponse(maskAmounts)
+		responses[i] = account.ToResponse(maskAmounts, currency)
 	}
 
 	return responses, nil

@@ -49,6 +49,8 @@ services:
       - JWT_SECRET=${JWT_SECRET:-dev-secret-key-change-in-production}
       - AUTH_USERNAME=${AUTH_USERNAME:-demo@accountstack.com}
       - AUTH_PASSWORD=${AUTH_PASSWORD:-demo123}
+      - FEATURE_MASK_AMOUNTS=${FEATURE_MASK_AMOUNTS:-false}
+      - FEATURE_CURRENCY=${FEATURE_CURRENCY:-USD}
     networks:
       - accountstack-network
     restart: unless-stopped

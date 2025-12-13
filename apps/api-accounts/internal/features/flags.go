@@ -11,6 +11,7 @@ import (
 // Flags holds all feature flags for the application
 type Flags struct {
 	maskAmounts bool
+	currency    string
 	mu          sync.RWMutex
 	logger      *logrus.Logger
 }
@@ -37,8 +38,16 @@ func Initialize(apiKey string, logger *logrus.Logger) (*Flags, error) {
 		}
 	}
 
+	// api.currency (default: "USD") - currency code for amounts
+	currency := os.Getenv("FEATURE_CURRENCY")
+	if currency == "" {
+		currency = "USD" // Default to USD
+	}
+	flags.currency = currency
+
 	logger.WithFields(logrus.Fields{
 		"maskAmounts": flags.maskAmounts,
+		"currency":    flags.currency,
 	}).Info("Feature flags initialized")
 
 	if apiKey != "" && apiKey != "dev-mode" {
@@ -72,6 +81,27 @@ func (f *Flags) SetMaskAmounts(enabled bool) {
 	defer f.mu.Unlock()
 	f.maskAmounts = enabled
 	f.logger.WithField("maskAmounts", enabled).Info("Feature flag updated")
+}
+
+// GetCurrency returns the currency code for amounts
+func (f *Flags) GetCurrency() string {
+	if f == nil {
+		return "USD"
+	}
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return f.currency
+}
+
+// SetCurrency sets the currency code (for testing/admin purposes)
+func (f *Flags) SetCurrency(currency string) {
+	if f == nil {
+		return
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.currency = currency
+	f.logger.WithField("currency", currency).Info("Feature flag updated")
 }
 
 // Shutdown gracefully shuts down the feature management system

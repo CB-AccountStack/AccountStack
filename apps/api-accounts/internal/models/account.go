@@ -32,15 +32,15 @@ type AccountResponse struct {
 	LastActivity  time.Time `json:"lastActivity"`
 }
 
-// ToResponse converts an Account to AccountResponse with optional masking
-func (a *Account) ToResponse(maskAmounts bool) AccountResponse {
+// ToResponse converts an Account to AccountResponse with optional masking and currency override
+func (a *Account) ToResponse(maskAmounts bool, currency string) AccountResponse {
 	resp := AccountResponse{
 		ID:            a.ID,
 		UserID:        a.UserID,
 		AccountNumber: a.AccountNumber,
 		AccountType:   a.AccountType,
 		AccountName:   a.AccountName,
-		Currency:      a.Currency,
+		Currency:      currency, // Use feature flag currency
 		Status:        a.Status,
 		OpenedDate:    a.OpenedDate,
 		LastActivity:  a.LastActivity,
