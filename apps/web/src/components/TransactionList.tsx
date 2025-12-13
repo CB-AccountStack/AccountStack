@@ -33,7 +33,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
     return matchesSearch && matchesType && matchesCategory && matchesStatus;
   });
 
-  const formatAmount = (amount: number, currency: string) => {
+  const formatAmount = (amount: number, currency: string = 'USD') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
@@ -195,7 +195,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
                         )}
                         <div className="flex items-center gap-2 mt-2">
                           <span className="text-xs text-gray-500">
-                            {format(new Date(transaction.transactionDate), 'MMM d, yyyy')}
+                            {format(new Date(transaction.date), 'MMM d, yyyy')}
                           </span>
                           <span className="text-xs text-gray-300">•</span>
                           <span className="text-xs text-gray-500 capitalize">{transaction.category}</span>
@@ -215,7 +215,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
                           }`}
                         >
                           {transaction.type === 'credit' ? '+' : '-'}
-                          {formatAmount(Math.abs(transaction.amount), transaction.currency)}
+                          {formatAmount(Math.abs(transaction.amount))}
                         </p>
                       </div>
                     </div>

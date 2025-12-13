@@ -24,14 +24,12 @@ export interface Transaction {
   id: string;
   accountId: string;
   amount: number;
-  currency: string;
   type: 'debit' | 'credit';
   category: string;
   description: string;
   merchant?: string;
   status: 'pending' | 'completed' | 'failed';
-  transactionDate: string;
-  createdAt: string;
+  date: string;
 }
 
 export interface Insight {

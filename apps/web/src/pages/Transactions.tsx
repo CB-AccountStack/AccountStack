@@ -54,7 +54,7 @@ export default function Transactions() {
       ['Date', 'Description', 'Merchant', 'Category', 'Type', 'Amount', 'Status'].join(','),
       ...transactions.map((t) =>
         [
-          t.transactionDate,
+          t.date,
           `"${t.description}"`,
           `"${t.merchant || ''}"`,
           t.category,
