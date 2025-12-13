@@ -1,5 +1,5 @@
 // CloudBees Feature Management (Rox) integration
-import Rox from 'rox-browser';
+import Rox, { type FetcherResults, type RoxSetupOptions } from 'rox-browser';
 
 // Define feature flags with default values
 export class FeatureFlags {
@@ -34,10 +34,10 @@ export async function initializeFeatureFlags(config: RoxConfig = {}): Promise<vo
   Rox.register('accountstack', flags);
 
   // Setup Rox with configuration
-  const roxConfig: Rox.RoxSetupOptions = {
+  const roxConfig: RoxSetupOptions = {
     debugLevel: 'verbose',
     // You can add custom properties here for targeting
-    configurationFetchedHandler: (fetcherResults) => {
+    configurationFetchedHandler: (fetcherResults: FetcherResults) => {
       console.log('[FeatureFlags] Configuration fetched:', {
         hasChanges: fetcherResults.hasChanges,
         source: fetcherResults.fetcherStatus,
