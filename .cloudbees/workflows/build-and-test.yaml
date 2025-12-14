@@ -12,10 +12,6 @@ on:
     branches:
       - main
 
-env:
-  DOCKER_REGISTRY: "ghcr.io"
-  IMAGE_PREFIX: "cb-accountstack/accountstack"
-
 jobs:
   # Build and test Web UI
   build-web:
@@ -43,13 +39,20 @@ jobs:
           echo "Building application..."
           npm run build
 
+      - name: Configure Docker credentials
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: https://index.docker.io/v1/
+          username: ${{ vars.AStack_docker_user }}
+          password: ${{ secrets.AStack_docker_token }}
+
       - name: Build Docker image
         kind: build
         uses: cloudbees-io/kaniko@v1
         with:
           context: apps/web
           dockerfile: apps/web/Dockerfile
-          destination: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ cloudbees.scm.sha }}
+          destination: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
@@ -78,13 +81,20 @@ jobs:
           echo "Building Go binary..."
           go build -o bin/accounts-api cmd/server/main.go
 
+      - name: Configure Docker credentials
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: https://index.docker.io/v1/
+          username: ${{ vars.AStack_docker_user }}
+          password: ${{ secrets.AStack_docker_token }}
+
       - name: Build Docker image
         kind: build
         uses: cloudbees-io/kaniko@v1
         with:
           context: apps/api-accounts
           dockerfile: apps/api-accounts/Dockerfile
-          destination: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-api-accounts:${{ cloudbees.scm.sha }}
+          destination: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
@@ -113,13 +123,20 @@ jobs:
           echo "Building Go binary..."
           go build -o bin/transactions-api cmd/server/main.go
 
+      - name: Configure Docker credentials
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: https://index.docker.io/v1/
+          username: ${{ vars.AStack_docker_user }}
+          password: ${{ secrets.AStack_docker_token }}
+
       - name: Build Docker image
         kind: build
         uses: cloudbees-io/kaniko@v1
         with:
           context: apps/api-transactions
           dockerfile: apps/api-transactions/Dockerfile
-          destination: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-api-transactions:${{ cloudbees.scm.sha }}
+          destination: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
@@ -148,12 +165,19 @@ jobs:
           echo "Building Go binary..."
           go build -o bin/insights-api cmd/server/main.go
 
+      - name: Configure Docker credentials
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: https://index.docker.io/v1/
+          username: ${{ vars.AStack_docker_user }}
+          password: ${{ secrets.AStack_docker_token }}
+
       - name: Build Docker image
         kind: build
         uses: cloudbees-io/kaniko@v1
         with:
           context: apps/api-insights
           dockerfile: apps/api-insights/Dockerfile
-          destination: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-api-insights:${{ cloudbees.scm.sha }}
+          destination: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
