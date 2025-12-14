@@ -17,10 +17,9 @@ on:
       commit_sha:
         type: string
         required: true
-      org_name:
+      repository:
         type: string
-        required: false
-        default: "CB-AccountStack"
+        required: true
       base_domain:
         type: string
         required: false
@@ -61,12 +60,15 @@ jobs:
           COMPONENT: ${{ inputs.component_name }}
           IMAGE: ${{ inputs.docker_image }}
           NAMESPACE: ${{ inputs.environment_name }}
-          ORG: ${{ inputs.org_name }}
+          REPOSITORY: ${{ inputs.repository }}
           BASE_DOMAIN: ${{ inputs.base_domain }}
           REPLICAS: ${{ inputs.replicas }}
           SHA: ${{ inputs.commit_sha }}
         run: |
           set -eu
+
+          # Extract owner from repository (format: owner/repo)
+          ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
 
           # Sanitize component name for Kubernetes (lowercase, alphanumeric + hyphens)
           APP_NAME=$(echo "$COMPONENT" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
@@ -209,6 +211,18 @@ jobs:
           echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
           echo "========================================="
 
+      - name: Extract org from repository
+        id: org
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          REPOSITORY: ${{ inputs.repository }}
+        run: |
+          set -eu
+          # Extract owner from repository (format: owner/repo)
+          ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
+          printf '%s' "$ORG" > "$CLOUDBEES_OUTPUTS/name"
+
       - name: Publish deployment evidence
         kind: deploy
         uses: cloudbees-io/publish-evidence-item@v1
@@ -218,9 +232,10 @@ jobs:
             ## Deployed: ${{ inputs.component_name }}
 
             **Environment:** `${{ inputs.environment_name }}`
+            **Repository:** `${{ inputs.repository }}`
             **Image:** `${{ inputs.docker_image }}`
             **Commit:** `${{ inputs.commit_sha }}`
-            **Access:** ${{ inputs.component_name == 'web' && format('https://{0}/{1}/{2}', inputs.base_domain, inputs.org_name, inputs.environment_name) || format('Internal ClusterIP service: {0}.{1}.svc.cluster.local', inputs.component_name, inputs.environment_name) }}
+            **Access:** ${{ inputs.component_name == 'web' && format('https://{0}/{1}/{2}', inputs.base_domain, steps.org.outputs.name, inputs.environment_name) || format('Internal ClusterIP service: {0}.{1}.svc.cluster.local', inputs.component_name, inputs.environment_name) }}
 
             ### Deployment Details
             - Kubernetes namespace: `${{ inputs.environment_name }}`
