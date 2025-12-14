@@ -68,8 +68,7 @@ jobs:
           context: apps/web
           dockerfile: apps/web/Dockerfile
           destination: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
-          build-args: |
-            BASE_PATH=${{ steps.basepath.outputs.value }}
+          buildArgs: BASE_PATH=${{ steps.basepath.outputs.value }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
