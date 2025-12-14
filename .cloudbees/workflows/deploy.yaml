@@ -17,6 +17,18 @@ on:
       commit_sha:
         type: string
         required: true
+      org_name:
+        type: string
+        required: false
+        default: "CB-AccountStack"
+      base_domain:
+        type: string
+        required: false
+        default: "accountstack.se-main-demo.sa-demo.beescloud.com"
+      replicas:
+        type: string
+        required: false
+        default: "1"
 
 jobs:
   deploy:
@@ -26,32 +38,169 @@ jobs:
       - name: Checkout
         uses: cloudbees-io/checkout@v1
 
-      - name: Deploy component
+      - name: Set kubeconfig
+        uses: guru-actions/kubeconfig@1.16
+        with:
+          secname: ${{ secrets.KUBECONFIG }}
+
+      - name: Create namespace if needed
+        uses: docker://alpine/kubectl:1.34.0
+        shell: sh
+        env:
+          NAMESPACE: ${{ inputs.environment_name }}
+        run: |
+          set -eu
+          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+          echo "✓ Namespace $NAMESPACE ready"
+
+      - name: Deploy to Kubernetes
         kind: deploy
-        uses: docker://alpine:3.20
+        uses: docker://alpine/kubectl:1.34.0
         shell: sh
         env:
           COMPONENT: ${{ inputs.component_name }}
           IMAGE: ${{ inputs.docker_image }}
-          ENV: ${{ inputs.environment_name }}
+          NAMESPACE: ${{ inputs.environment_name }}
+          ORG: ${{ inputs.org_name }}
+          BASE_DOMAIN: ${{ inputs.base_domain }}
+          REPLICAS: ${{ inputs.replicas }}
           SHA: ${{ inputs.commit_sha }}
         run: |
           set -eu
+
+          # Sanitize component name for Kubernetes (lowercase, alphanumeric + hyphens)
+          APP_NAME=$(echo "$COMPONENT" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+
+          # Build path prefix: /org-name/env/component
+          PATH_PREFIX="/${ORG}/${NAMESPACE}/${APP_NAME}"
+
           echo "========================================="
-          echo "Deploying: $COMPONENT"
-          echo "Environment: $ENV"
+          echo "Deploying: $APP_NAME"
+          echo "Environment: $NAMESPACE"
           echo "Image: $IMAGE"
-          echo "Commit: $SHA"
+          echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
           echo "========================================="
 
-          # Simulate deployment steps
-          echo "✓ Pulling Docker image..."
-          echo "✓ Updating configuration..."
-          echo "✓ Restarting service..."
-          echo "✓ Running health checks..."
+          # Create Deployment
+          cat <<EOF | kubectl apply -f -
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: ${APP_NAME}
+            namespace: ${NAMESPACE}
+            labels:
+              app: ${APP_NAME}
+              component: ${COMPONENT}
+              org: ${ORG}
+              commit: ${SHA}
+          spec:
+            replicas: ${REPLICAS}
+            selector:
+              matchLabels:
+                app: ${APP_NAME}
+            template:
+              metadata:
+                labels:
+                  app: ${APP_NAME}
+                  component: ${COMPONENT}
+              spec:
+                containers:
+                - name: ${APP_NAME}
+                  image: ${IMAGE}
+                  imagePullPolicy: Always
+                  ports:
+                  - containerPort: 3000
+                    name: http
+                  env:
+                  - name: PORT
+                    value: "3000"
+                  - name: NODE_ENV
+                    value: "production"
+                  resources:
+                    requests:
+                      cpu: 50m
+                      memory: 64Mi
+                    limits:
+                      cpu: 250m
+                      memory: 256Mi
+                  livenessProbe:
+                    httpGet:
+                      path: /healthz
+                      port: 3000
+                    initialDelaySeconds: 30
+                    periodSeconds: 10
+                  readinessProbe:
+                    httpGet:
+                      path: /healthz
+                      port: 3000
+                    initialDelaySeconds: 5
+                    periodSeconds: 5
+          EOF
+
+          echo "✓ Deployment created"
+
+          # Create Service
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ${APP_NAME}
+            namespace: ${NAMESPACE}
+            labels:
+              app: ${APP_NAME}
+          spec:
+            selector:
+              app: ${APP_NAME}
+            ports:
+            - port: 80
+              targetPort: 3000
+              protocol: TCP
+              name: http
+            type: ClusterIP
+          EOF
+
+          echo "✓ Service created"
+
+          # Create or update Ingress with path-based routing
+          cat <<EOF | kubectl apply -f -
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: accountstack-${NAMESPACE}
+            namespace: ${NAMESPACE}
+            annotations:
+              cert-manager.io/cluster-issuer: "letsencrypt-prod"
+              nginx.ingress.kubernetes.io/rewrite-target: /\$2
+              nginx.ingress.kubernetes.io/use-regex: "true"
+          spec:
+            ingressClassName: nginx
+            tls:
+            - hosts:
+              - ${BASE_DOMAIN}
+              secretName: accountstack-tls
+            rules:
+            - host: ${BASE_DOMAIN}
+              http:
+                paths:
+                - path: ${PATH_PREFIX}(/|$)(.*)
+                  pathType: ImplementationSpecific
+                  backend:
+                    service:
+                      name: ${APP_NAME}
+                      port:
+                        number: 80
+          EOF
+
+          echo "✓ Ingress configured"
+          echo ""
+          echo "Waiting for deployment to be ready..."
+          kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=5m
 
           echo ""
+          echo "========================================="
           echo "Deployment completed successfully!"
+          echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
+          echo "========================================="
 
       - name: Publish deployment evidence
         kind: deploy
@@ -64,8 +213,11 @@ jobs:
             **Environment:** `${{ inputs.environment_name }}`
             **Image:** `${{ inputs.docker_image }}`
             **Commit:** `${{ inputs.commit_sha }}`
+            **URL:** https://${{ inputs.base_domain }}/${{ inputs.org_name }}/${{ inputs.environment_name }}/${{ inputs.component_name }}
 
             ### Deployment Details
-            - Service restarted successfully
-            - Health checks passed
-            - Ready to serve traffic
+            - Kubernetes namespace: `${{ inputs.environment_name }}`
+            - Replicas: ${{ inputs.replicas }}
+            - Path-based routing enabled
+            - SSL certificate: cert-manager with Let's Encrypt
+            - Deployment successful ✓
