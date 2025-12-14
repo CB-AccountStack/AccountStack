@@ -241,5 +241,5 @@ jobs:
             - Kubernetes namespace: `${{ inputs.environment_name }}`
             - Service name: `${{ inputs.component_name }}`
             - Replicas: ${{ inputs.replicas }}
-            ${{ inputs.component_name == 'web' && '- Public ingress with SSL (cert-manager + Let\'s Encrypt)' || '- Internal service only (not publicly accessible)' }}
+            ${{ inputs.component_name == 'web' && '- Public ingress with SSL (cert-manager + LetsEncrypt)' || '- Internal service only (not publicly accessible)' }}
             - Deployment successful ✓
