@@ -57,36 +57,36 @@ apiClient.interceptors.response.use(
 class ApiService {
   // User endpoints
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<User>('/accounts/me');
+    const response = await apiClient.get<User>('accounts/me');
     return response.data;
   }
 
   // Account endpoints
   async getAccounts(): Promise<Account[]> {
-    const response = await apiClient.get<Account[]>('/accounts');
+    const response = await apiClient.get<Account[]>('accounts');
     return response.data;
   }
 
   async getAccount(accountId: string): Promise<Account> {
-    const response = await apiClient.get<Account>(`/accounts/${accountId}`);
+    const response = await apiClient.get<Account>(`accounts/${accountId}`);
     return response.data;
   }
 
   async createAccount(accountData: Partial<Account>): Promise<Account> {
-    const response = await apiClient.post<Account>('/accounts', accountData);
+    const response = await apiClient.post<Account>('accounts', accountData);
     return response.data;
   }
 
   async updateAccount(accountId: string, accountData: Partial<Account>): Promise<Account> {
     const response = await apiClient.put<Account>(
-      `/accounts/${accountId}`,
+      `accounts/${accountId}`,
       accountData
     );
     return response.data;
   }
 
   async deleteAccount(accountId: string): Promise<void> {
-    await apiClient.delete(`/accounts/${accountId}`);
+    await apiClient.delete(`accounts/${accountId}`);
   }
 
   // Transaction endpoints
@@ -99,7 +99,7 @@ class ApiService {
     page?: number;
     pageSize?: number;
   }): Promise<Transaction[]> {
-    const response = await apiClient.get<Transaction[]>('/transactions', {
+    const response = await apiClient.get<Transaction[]>('transactions', {
       params,
     });
     return response.data;
@@ -107,14 +107,14 @@ class ApiService {
 
   async getTransaction(transactionId: string): Promise<Transaction> {
     const response = await apiClient.get<Transaction>(
-      `/transactions/${transactionId}`
+      `transactions/${transactionId}`
     );
     return response.data;
   }
 
   async createTransaction(transactionData: Partial<Transaction>): Promise<Transaction> {
     const response = await apiClient.post<Transaction>(
-      '/transactions',
+      'transactions',
       transactionData
     );
     return response.data;
@@ -126,23 +126,23 @@ class ApiService {
     severity?: string;
     dismissed?: boolean;
   }): Promise<Insight[]> {
-    const response = await apiClient.get<Insight[]>('/insights', {
+    const response = await apiClient.get<Insight[]>('insights', {
       params,
     });
     return response.data;
   }
 
   async getInsight(insightId: string): Promise<Insight> {
-    const response = await apiClient.get<Insight>(`/insights/${insightId}`);
+    const response = await apiClient.get<Insight>(`insights/${insightId}`);
     return response.data;
   }
 
   async dismissInsight(insightId: string): Promise<void> {
-    await apiClient.patch(`/insights/${insightId}/dismiss`);
+    await apiClient.patch(`insights/${insightId}/dismiss`);
   }
 
   async takeAction(insightId: string): Promise<void> {
-    await apiClient.post(`/insights/${insightId}/action`);
+    await apiClient.post(`insights/${insightId}/action`);
   }
 }
 
