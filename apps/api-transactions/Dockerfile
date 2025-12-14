@@ -5,16 +5,16 @@ FROM golang:1.21-alpine AS builder
 RUN apk add --no-cache git
 
 # Set working directory
-WORKDIR /app
+WORKDIR /build
 
 # Copy go mod files
-COPY go.mod go.sum ./
+COPY apps/api-transactions/go.mod apps/api-transactions/go.sum ./
 
 # Download dependencies
 RUN go mod download
 
 # Copy source code
-COPY . .
+COPY apps/api-transactions/ ./
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o transactions-api cmd/server/main.go
@@ -32,13 +32,20 @@ RUN addgroup -g 1000 appuser && \
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /app/transactions-api .
+COPY --from=builder /build/transactions-api .
+
+# Copy seed data from the build context
+COPY data/seed ./data
 
 # Change ownership
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
+
+# Set environment variables
+ENV DATA_PATH=/app/data \
+    PORT=3000
 
 # Expose port
 EXPOSE 8002

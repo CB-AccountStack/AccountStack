@@ -5,16 +5,16 @@ FROM golang:1.21-alpine AS builder
 RUN apk add --no-cache git
 
 # Set working directory
-WORKDIR /app
+WORKDIR /build
 
 # Copy go mod files
-COPY go.mod go.sum ./
+COPY apps/api-insights/go.mod apps/api-insights/go.sum ./
 
 # Download dependencies
 RUN go mod download
 
 # Copy source code
-COPY . .
+COPY apps/api-insights/ ./
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o insights-api cmd/server/main.go
@@ -32,13 +32,20 @@ RUN addgroup -g 1000 appuser && \
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /app/insights-api .
+COPY --from=builder /build/insights-api .
+
+# Copy seed data from the build context
+COPY data/seed ./data
 
 # Change ownership
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
+
+# Set environment variables
+ENV DATA_PATH=/app/data \
+    PORT=3000
 
 # Expose port
 EXPOSE 8003

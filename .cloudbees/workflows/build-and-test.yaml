@@ -92,7 +92,7 @@ jobs:
         kind: build
         uses: cloudbees-io/kaniko@v1
         with:
-          context: apps/api-accounts
+          context: .
           dockerfile: apps/api-accounts/Dockerfile
           destination: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
           labels: |
@@ -134,7 +134,7 @@ jobs:
         kind: build
         uses: cloudbees-io/kaniko@v1
         with:
-          context: apps/api-transactions
+          context: .
           dockerfile: apps/api-transactions/Dockerfile
           destination: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
           labels: |
@@ -176,7 +176,7 @@ jobs:
         kind: build
         uses: cloudbees-io/kaniko@v1
         with:
-          context: apps/api-insights
+          context: .
           dockerfile: apps/api-insights/Dockerfile
           destination: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
           labels: |
