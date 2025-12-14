@@ -15,10 +15,14 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 
+# Accept base path as build argument
+ARG BASE_PATH=/
+ENV BASE_PATH=${BASE_PATH}
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build application
+# Build application with base path
 RUN npm run build
 
 # Production image, copy all the files and run next

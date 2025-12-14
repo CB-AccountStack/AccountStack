@@ -46,6 +46,21 @@ jobs:
           username: ${{ vars.AStack_docker_user }}
           password: ${{ secrets.AStack_docker_token }}
 
+      - name: Calculate base path
+        id: basepath
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          REPOSITORY: ${{ cloudbees.scm.repository }}
+        run: |
+          set -eu
+          # Extract owner from repository (format: owner/repo)
+          ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
+          # Construct base path: /org/env
+          BASE_PATH="/${ORG}/account-stack-dev"
+          printf '%s' "$BASE_PATH" > "$CLOUDBEES_OUTPUTS/value"
+          echo "Base path: $BASE_PATH"
+
       - name: Build Docker image
         kind: build
         uses: cloudbees-io/kaniko@v1
@@ -53,6 +68,8 @@ jobs:
           context: apps/web
           dockerfile: apps/web/Dockerfile
           destination: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
+          build-args: |
+            BASE_PATH=${{ steps.basepath.outputs.value }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
