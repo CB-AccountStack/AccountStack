@@ -71,14 +71,18 @@ jobs:
           # Sanitize component name for Kubernetes (lowercase, alphanumeric + hyphens)
           APP_NAME=$(echo "$COMPONENT" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
 
-          # Build path prefix: /org-name/env/component
-          PATH_PREFIX="/${ORG}/${NAMESPACE}/${APP_NAME}"
+          # Build path prefix: /org-name/env (only for web frontend)
+          PATH_PREFIX="/${ORG}/${NAMESPACE}"
 
           echo "========================================="
           echo "Deploying: $APP_NAME"
           echo "Environment: $NAMESPACE"
           echo "Image: $IMAGE"
-          echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
+          if [ "$COMPONENT" = "web" ]; then
+            echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
+          else
+            echo "Internal service (ClusterIP)"
+          fi
           echo "========================================="
 
           # Create Deployment
@@ -161,8 +165,9 @@ jobs:
 
           echo "✓ Service created"
 
-          # Create or update Ingress with path-based routing
-          cat <<EOF | kubectl apply -f -
+          # Create Ingress ONLY for web frontend
+          if [ "$COMPONENT" = "web" ]; then
+            cat <<EOF | kubectl apply -f -
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
@@ -190,8 +195,10 @@ jobs:
                       port:
                         number: 80
           EOF
-
-          echo "✓ Ingress configured"
+            echo "✓ Ingress configured for web frontend"
+          else
+            echo "✓ API service deployed (internal ClusterIP only)"
+          fi
           echo ""
           echo "Waiting for deployment to be ready..."
           kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=5m
@@ -213,11 +220,11 @@ jobs:
             **Environment:** `${{ inputs.environment_name }}`
             **Image:** `${{ inputs.docker_image }}`
             **Commit:** `${{ inputs.commit_sha }}`
-            **URL:** https://${{ inputs.base_domain }}/${{ inputs.org_name }}/${{ inputs.environment_name }}/${{ inputs.component_name }}
+            **Access:** ${{ inputs.component_name == 'web' && format('https://{0}/{1}/{2}', inputs.base_domain, inputs.org_name, inputs.environment_name) || format('Internal ClusterIP service: {0}.{1}.svc.cluster.local', inputs.component_name, inputs.environment_name) }}
 
             ### Deployment Details
             - Kubernetes namespace: `${{ inputs.environment_name }}`
+            - Service name: `${{ inputs.component_name }}`
             - Replicas: ${{ inputs.replicas }}
-            - Path-based routing enabled
-            - SSL certificate: cert-manager with Let's Encrypt
+            ${{ inputs.component_name == 'web' && '- Public ingress with SSL (cert-manager + Let\'s Encrypt)' || '- Internal service only (not publicly accessible)' }}
             - Deployment successful ✓
