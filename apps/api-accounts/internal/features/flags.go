@@ -93,6 +93,70 @@ func (f *Flags) GetCurrency() string {
 	return f.currency
 }
 
+// GetCurrencyForUser returns the currency code based on user context (country)
+// This demonstrates CloudBees Feature Management targeting by user properties
+func (f *Flags) GetCurrencyForUser(userCountry string) string {
+	if f == nil {
+		return "USD"
+	}
+
+	// If FEATURE_CURRENCY is set globally, use that (environment override)
+	f.mu.RLock()
+	globalCurrency := f.currency
+	f.mu.RUnlock()
+
+	// If environment variable explicitly set (not default), use it
+	if os.Getenv("FEATURE_CURRENCY") != "" {
+		return globalCurrency
+	}
+
+	// Otherwise, use country-based targeting (simulates CloudBees targeting rules)
+	currency := countryToCurrency(userCountry)
+
+	f.logger.WithFields(logrus.Fields{
+		"userCountry": userCountry,
+		"currency":    currency,
+	}).Debug("Currency determined by user country")
+
+	return currency
+}
+
+// countryToCurrency maps country codes to currency codes
+// This simulates CloudBees Feature Management targeting rules:
+//   IF user.country == "US" THEN currency = "USD"
+//   IF user.country == "UK" THEN currency = "GBP"
+//   IF user.country == "FR" THEN currency = "EUR"
+func countryToCurrency(country string) string {
+	countryMap := map[string]string{
+		"US": "USD",
+		"UK": "GBP",
+		"GB": "GBP", // Alternative code for United Kingdom
+		"FR": "EUR",
+		"DE": "EUR",
+		"ES": "EUR",
+		"IT": "EUR",
+		"NL": "EUR",
+		"BE": "EUR",
+		"AT": "EUR",
+		"PT": "EUR",
+		"IE": "EUR",
+		"CA": "CAD",
+		"AU": "AUD",
+		"JP": "JPY",
+		"CN": "CNY",
+		"IN": "INR",
+		"BR": "BRL",
+		"MX": "MXN",
+	}
+
+	if currency, ok := countryMap[country]; ok {
+		return currency
+	}
+
+	// Default to USD if country not mapped
+	return "USD"
+}
+
 // SetCurrency sets the currency code (for testing/admin purposes)
 func (f *Flags) SetCurrency(currency string) {
 	if f == nil {

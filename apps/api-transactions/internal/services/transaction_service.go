@@ -33,52 +33,63 @@ func (s *TransactionService) GetTransactionByID(txnID string) (*models.Transacti
 
 // GetTransactions retrieves transactions with optional filters
 // Advanced filters (date range, amount range, category) are only applied if feature flag is enabled
-func (s *TransactionService) GetTransactions(filters *models.TransactionFilters) ([]*models.Transaction, error) {
+// IMPORTANT: This enforces user isolation - only returns transactions for the specified user's accounts
+func (s *TransactionService) GetTransactions(userID string, filters *models.TransactionFilters) ([]*models.Transaction, error) {
+	// Get all account IDs for this user (enforces user isolation)
+	userAccountIDs := s.repo.GetAccountIDsByUserID(userID)
+	if len(userAccountIDs) == 0 {
+		s.logger.WithField("userId", userID).Warn("No accounts found for user")
+		return []*models.Transaction{}, nil
+	}
+
+	s.logger.WithFields(logrus.Fields{
+		"userId":     userID,
+		"accountIds": userAccountIDs,
+	}).Debug("Filtering transactions by user accounts")
+
 	// Check if advanced filters are enabled
 	advancedFiltersEnabled := s.flags.IsAdvancedFiltersEnabled()
 
-	// Create a new filter set based on feature flag
-	effectiveFilters := &models.TransactionFilters{
-		AccountID: filters.AccountID,
-	}
+	// Get transactions for all user's accounts
+	var allTransactions []*models.Transaction
 
-	// Only apply advanced filters if the feature flag is enabled
-	if advancedFiltersEnabled {
-		effectiveFilters.StartDate = filters.StartDate
-		effectiveFilters.EndDate = filters.EndDate
-		effectiveFilters.Category = filters.Category
-		effectiveFilters.MinAmount = filters.MinAmount
-		effectiveFilters.MaxAmount = filters.MaxAmount
-
-		s.logger.WithFields(logrus.Fields{
-			"accountId": filters.AccountID,
-			"startDate": filters.StartDate,
-			"endDate":   filters.EndDate,
-			"category":  filters.Category,
-			"minAmount": filters.MinAmount,
-			"maxAmount": filters.MaxAmount,
-		}).Debug("Using advanced filters")
-	} else {
-		// Log that advanced filters are ignored
-		if filters.StartDate != nil || filters.EndDate != nil || filters.Category != "" ||
-			filters.MinAmount != nil || filters.MaxAmount != nil {
-			s.logger.Info("Advanced filters requested but feature flag is disabled, only accountId filter will be applied")
+	for _, accountID := range userAccountIDs {
+		// Create filter for this account
+		effectiveFilters := &models.TransactionFilters{
+			AccountID: accountID,
 		}
 
-		s.logger.WithField("accountId", filters.AccountID).Debug("Using basic filters only")
+		// Only apply advanced filters if the feature flag is enabled
+		if advancedFiltersEnabled {
+			effectiveFilters.StartDate = filters.StartDate
+			effectiveFilters.EndDate = filters.EndDate
+			effectiveFilters.Category = filters.Category
+			effectiveFilters.MinAmount = filters.MinAmount
+			effectiveFilters.MaxAmount = filters.MaxAmount
+		} else {
+			// Log that advanced filters are ignored
+			if filters.StartDate != nil || filters.EndDate != nil || filters.Category != "" ||
+				filters.MinAmount != nil || filters.MaxAmount != nil {
+				s.logger.Info("Advanced filters requested but feature flag is disabled, only accountId filter will be applied")
+			}
+		}
+
+		// Get transactions for this account
+		accountTransactions := s.repo.GetTransactionsByFilter(effectiveFilters)
+		allTransactions = append(allTransactions, accountTransactions...)
 	}
 
-	// Get filtered transactions
-	transactions := s.repo.GetTransactionsByFilter(effectiveFilters)
-
 	// Sort by date descending (most recent first)
-	sort.Slice(transactions, func(i, j int) bool {
-		return transactions[i].Date.After(transactions[j].Date)
+	sort.Slice(allTransactions, func(i, j int) bool {
+		return allTransactions[i].Date.After(allTransactions[j].Date)
 	})
 
-	s.logger.WithField("count", len(transactions)).Info("Retrieved transactions")
+	s.logger.WithFields(logrus.Fields{
+		"userId": userID,
+		"count":  len(allTransactions),
+	}).Info("Retrieved transactions for user")
 
-	return transactions, nil
+	return allTransactions, nil
 }
 
 // ParseDateParam parses a date string in ISO 8601 format

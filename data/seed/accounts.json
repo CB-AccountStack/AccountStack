@@ -47,5 +47,29 @@
     "status": "active",
     "openedDate": "2023-06-20T00:00:00Z",
     "lastActivity": "2024-12-13T06:00:00Z"
+  },
+  {
+    "id": "acc-005",
+    "userId": "user-003",
+    "accountNumber": "****7890",
+    "accountType": "checking",
+    "accountName": "Compte Courant",
+    "balance": 8234.50,
+    "currency": "EUR",
+    "status": "active",
+    "openedDate": "2023-09-10T00:00:00Z",
+    "lastActivity": "2024-12-13T08:45:00Z"
+  },
+  {
+    "id": "acc-006",
+    "userId": "user-003",
+    "accountNumber": "****2468",
+    "accountType": "savings",
+    "accountName": "Livret A",
+    "balance": 15678.25,
+    "currency": "EUR",
+    "status": "active",
+    "openedDate": "2023-09-10T00:00:00Z",
+    "lastActivity": "2024-12-11T14:30:00Z"
   }
 ]

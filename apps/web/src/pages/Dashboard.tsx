@@ -34,10 +34,13 @@ export default function Dashboard() {
     { totalBalance: 0, accountCount: 0, liquidAssets: 0 }
   );
 
+  // Get currency from user's accounts (all accounts have the same currency)
+  const userCurrency = accounts?.[0]?.currency || 'USD';
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: userCurrency,
     }).format(amount);
   };
 

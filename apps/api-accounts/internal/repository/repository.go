@@ -99,6 +99,20 @@ func (r *Repository) GetUserByID(userID string) (*models.User, error) {
 	return user, nil
 }
 
+// GetUserByEmail retrieves a user by email address
+func (r *Repository) GetUserByEmail(email string) (*models.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, user := range r.users {
+		if user.Email == email {
+			return user, nil
+		}
+	}
+
+	return nil, fmt.Errorf("user not found")
+}
+
 // GetAccountByID retrieves an account by ID
 func (r *Repository) GetAccountByID(accountID string) (*models.Account, error) {
 	r.mu.RLock()

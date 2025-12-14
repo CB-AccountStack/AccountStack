@@ -50,7 +50,7 @@ services:
       - AUTH_USERNAME=${AUTH_USERNAME:-demo@accountstack.com}
       - AUTH_PASSWORD=${AUTH_PASSWORD:-demo123}
       - FEATURE_MASK_AMOUNTS=${FEATURE_MASK_AMOUNTS:-false}
-      - FEATURE_CURRENCY=${FEATURE_CURRENCY:-USD}
+      # - FEATURE_CURRENCY=${FEATURE_CURRENCY:-USD}  # Commented out to enable user-based currency targeting by country
     networks:
       - accountstack-network
     restart: unless-stopped

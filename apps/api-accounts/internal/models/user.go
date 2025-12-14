@@ -9,6 +9,7 @@ type User struct {
 	Name      string    `json:"name"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
+	Country   string    `json:"country"` // ISO 3166-1 alpha-2 country code (US, UK, FR, etc.)
 	CreatedAt time.Time `json:"createdAt"`
 	LastLogin time.Time `json:"lastLogin"`
 }

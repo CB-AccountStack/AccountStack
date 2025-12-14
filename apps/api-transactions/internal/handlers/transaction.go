@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/CB-AccountStack/AccountStack/apps/api-transactions/internal/middleware"
 	"github.com/CB-AccountStack/AccountStack/apps/api-transactions/internal/models"
 	"github.com/CB-AccountStack/AccountStack/apps/api-transactions/internal/services"
 	"github.com/gorilla/mux"
@@ -33,7 +34,17 @@ func NewTransactionHandler(service *services.TransactionService, logger *logrus.
 // - category: filter by category (requires advancedFilters flag)
 // - minAmount: filter by minimum amount (requires advancedFilters flag)
 // - maxAmount: filter by maximum amount (requires advancedFilters flag)
+//
+// IMPORTANT: Enforces user isolation - only returns transactions for the authenticated user's accounts
 func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context (set by auth middleware)
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		h.logger.Warn("User ID not found in context")
+		h.respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	// Parse query parameters
 	query := r.URL.Query()
 
@@ -88,8 +99,8 @@ func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Requ
 		filters.MaxAmount = &maxAmount
 	}
 
-	// Get transactions with filters
-	transactions, err := h.service.GetTransactions(filters)
+	// Get transactions with filters (user isolation enforced in service layer)
+	transactions, err := h.service.GetTransactions(userID, filters)
 	if err != nil {
 		h.logger.WithError(err).Error("Failed to retrieve transactions")
 		h.respondError(w, http.StatusInternalServerError, "Failed to retrieve transactions")

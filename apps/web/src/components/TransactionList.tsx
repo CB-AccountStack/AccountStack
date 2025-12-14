@@ -6,9 +6,10 @@ import { useFeatureFlags } from '../features/flags';
 
 interface TransactionListProps {
   transactions: Transaction[];
+  currency?: string;
 }
 
-export default function TransactionList({ transactions }: TransactionListProps) {
+export default function TransactionList({ transactions, currency = 'USD' }: TransactionListProps) {
   const { transactionsFilters } = useFeatureFlags();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -33,7 +34,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
     return matchesSearch && matchesType && matchesCategory && matchesStatus;
   });
 
-  const formatAmount = (amount: number, currency: string = 'USD') => {
+  const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

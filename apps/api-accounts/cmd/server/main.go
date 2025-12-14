@@ -78,7 +78,7 @@ func main() {
 	healthHandler := handlers.NewHealthHandler()
 	userHandler := handlers.NewUserHandler(userService, logger)
 	accountHandler := handlers.NewAccountHandler(accountService, logger)
-	authHandler := handlers.NewAuthHandler(logger)
+	authHandler := handlers.NewAuthHandler(repo, logger)
 
 	// Setup router
 	router := mux.NewRouter()

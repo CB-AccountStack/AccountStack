@@ -9,6 +9,12 @@ import type { Transaction } from '../types';
 export default function Transactions() {
   const { transactionsFilters } = useFeatureFlags();
 
+  // Fetch accounts to get user's currency
+  const { data: accounts } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => api.getAccounts(),
+  });
+
   // Fetch transactions data
   const {
     data: transactions,
@@ -22,6 +28,9 @@ export default function Transactions() {
     queryFn: () => api.getTransactions(),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  // Get currency from user's accounts (all accounts have the same currency)
+  const userCurrency = accounts?.[0]?.currency || 'USD';
 
   // Calculate statistics
   const stats = transactions?.reduce(
@@ -42,7 +51,7 @@ export default function Transactions() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: userCurrency,
     }).format(amount);
   };
 
@@ -194,7 +203,7 @@ export default function Transactions() {
 
       {/* Transaction List */}
       {transactions && transactions.length > 0 ? (
-        <TransactionList transactions={transactions} />
+        <TransactionList transactions={transactions} currency={userCurrency} />
       ) : (
         <div className="card p-12 text-center">
           <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">

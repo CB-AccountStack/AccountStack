@@ -7,20 +7,20 @@ import (
 	"time"
 
 	"github.com/CB-AccountStack/AccountStack/apps/api-accounts/internal/auth"
+	"github.com/CB-AccountStack/AccountStack/apps/api-accounts/internal/repository"
 	"github.com/sirupsen/logrus"
 )
 
 // AuthHandler handles authentication requests
 type AuthHandler struct {
-	jwtManager *auth.JWTManager
-	logger     *logrus.Logger
-	// In production, these would come from a database
-	validUsername string
-	validPassword string
+	jwtManager   *auth.JWTManager
+	logger       *logrus.Logger
+	repo         *repository.Repository
+	demoPassword string // Hashed password - same for all users in demo mode
 }
 
 // NewAuthHandler creates a new auth handler
-func NewAuthHandler(logger *logrus.Logger) *AuthHandler {
+func NewAuthHandler(repo *repository.Repository, logger *logrus.Logger) *AuthHandler {
 	// Get JWT secret from environment
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
@@ -28,12 +28,7 @@ func NewAuthHandler(logger *logrus.Logger) *AuthHandler {
 		logger.Warn("JWT_SECRET not set, using default (not secure for production)")
 	}
 
-	// Get credentials from environment
-	username := os.Getenv("AUTH_USERNAME")
-	if username == "" {
-		username = "demo@accountstack.com"
-	}
-
+	// Get demo password from environment (all users use this in demo mode)
 	password := os.Getenv("AUTH_PASSWORD")
 	if password == "" {
 		password = "demo123"
@@ -46,10 +41,10 @@ func NewAuthHandler(logger *logrus.Logger) *AuthHandler {
 	}
 
 	return &AuthHandler{
-		jwtManager:    auth.NewJWTManager(jwtSecret, 24*time.Hour),
-		logger:        logger,
-		validUsername: username,
-		validPassword: hashedPassword,
+		jwtManager:   auth.NewJWTManager(jwtSecret, 24*time.Hour),
+		logger:       logger,
+		repo:         repo,
+		demoPassword: hashedPassword,
 	}
 }
 
@@ -87,21 +82,23 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate credentials
-	if req.Username != h.validUsername {
-		h.logger.WithField("username", req.Username).Warn("Invalid username")
+	// Look up user by email in the repository
+	user, err := h.repo.GetUserByEmail(req.Username)
+	if err != nil {
+		h.logger.WithField("username", req.Username).Warn("User not found")
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	if err := auth.VerifyPassword(h.validPassword, req.Password); err != nil {
+	// Validate password (all users use demo password in demo mode)
+	if err := auth.VerifyPassword(h.demoPassword, req.Password); err != nil {
 		h.logger.WithField("username", req.Username).Warn("Invalid password")
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
 	// Generate JWT token
-	token, err := h.jwtManager.Generate("user-001", req.Username)
+	token, err := h.jwtManager.Generate(user.ID, req.Username)
 	if err != nil {
 		h.logger.WithError(err).Error("Failed to generate token")
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -112,9 +109,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Token:     token,
 		ExpiresIn: 86400, // 24 hours in seconds
 		User: User{
-			ID:    "user-001",
-			Email: req.Username,
-			Name:  "Demo User",
+			ID:    user.ID,
+			Email: user.Email,
+			Name:  user.Name,
 		},
 	}
 
