@@ -193,7 +193,7 @@ jobs:
       docker_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
-      base_domain: ${{ vars.BASE_DOMAIN || 'accountstack.se-main-demo.sa-demo.beescloud.com' }}
+      base_domain: accountstack.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
     secrets: inherit
 
@@ -208,7 +208,7 @@ jobs:
       docker_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
-      base_domain: ${{ vars.BASE_DOMAIN || 'accountstack.se-main-demo.sa-demo.beescloud.com' }}
+      base_domain: accountstack.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
     secrets: inherit
 
@@ -223,7 +223,7 @@ jobs:
       docker_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
-      base_domain: ${{ vars.BASE_DOMAIN || 'accountstack.se-main-demo.sa-demo.beescloud.com' }}
+      base_domain: accountstack.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
     secrets: inherit
 
@@ -238,6 +238,6 @@ jobs:
       docker_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
-      base_domain: ${{ vars.BASE_DOMAIN || 'accountstack.se-main-demo.sa-demo.beescloud.com' }}
+      base_domain: accountstack.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
     secrets: inherit
