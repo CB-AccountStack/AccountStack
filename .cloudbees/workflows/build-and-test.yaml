@@ -52,12 +52,35 @@ jobs:
         shell: sh
         env:
           REPOSITORY: ${{ cloudbees.scm.repository }}
+          BRANCH: ${{ cloudbees.scm.branch }}
         run: |
           set -eu
           # Extract owner from repository (format: owner/repo)
           ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
+
+          # Map branch name to environment name
+          case "$BRANCH" in
+            main)
+              ENV_NAME="account-stack-dev"
+              ;;
+            develop)
+              ENV_NAME="account-stack-develop"
+              ;;
+            staging)
+              ENV_NAME="account-stack-staging"
+              ;;
+            production)
+              ENV_NAME="account-stack-prod"
+              ;;
+            *)
+              # For other branches, sanitize branch name for use in path
+              ENV_NAME=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//; s/-*$//')
+              ENV_NAME="account-stack-${ENV_NAME}"
+              ;;
+          esac
+
           # Construct base path: /org/env
-          BASE_PATH="/${ORG}/account-stack-dev"
+          BASE_PATH="/${ORG}/${ENV_NAME}"
           printf '%s' "$BASE_PATH" > "$CLOUDBEES_OUTPUTS/value"
           echo "Base path: $BASE_PATH"
 
