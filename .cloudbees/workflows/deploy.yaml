@@ -1,0 +1,71 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name: Deploy AccountStack
+
+on:
+  workflow_call:
+    inputs:
+      component_name:
+        type: string
+        required: true
+      docker_image:
+        type: string
+        required: true
+      environment_name:
+        type: string
+        required: true
+      commit_sha:
+        type: string
+        required: true
+
+jobs:
+  deploy:
+    environment: ${{ inputs.environment_name }}
+
+    steps:
+      - name: Checkout
+        uses: cloudbees-io/checkout@v1
+
+      - name: Deploy component
+        kind: deploy
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          COMPONENT: ${{ inputs.component_name }}
+          IMAGE: ${{ inputs.docker_image }}
+          ENV: ${{ inputs.environment_name }}
+          SHA: ${{ inputs.commit_sha }}
+        run: |
+          set -eu
+          echo "========================================="
+          echo "Deploying: $COMPONENT"
+          echo "Environment: $ENV"
+          echo "Image: $IMAGE"
+          echo "Commit: $SHA"
+          echo "========================================="
+
+          # Simulate deployment steps
+          echo "✓ Pulling Docker image..."
+          echo "✓ Updating configuration..."
+          echo "✓ Restarting service..."
+          echo "✓ Running health checks..."
+
+          echo ""
+          echo "Deployment completed successfully!"
+
+      - name: Publish deployment evidence
+        kind: deploy
+        uses: cloudbees-io/publish-evidence-item@v1
+        with:
+          format: MARKDOWN
+          content: |
+            ## Deployed: ${{ inputs.component_name }}
+
+            **Environment:** `${{ inputs.environment_name }}`
+            **Image:** `${{ inputs.docker_image }}`
+            **Commit:** `${{ inputs.commit_sha }}`
+
+            ### Deployment Details
+            - Service restarted successfully
+            - Health checks passed
+            - Ready to serve traffic

@@ -181,3 +181,51 @@ jobs:
           destination: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
+
+  # Deploy Web UI to Dev
+  deploy-web-dev:
+    if: ${{ cloudbees.scm.branch == 'main' }}
+    environment: dev
+    uses: github.com/CB-AccountStack/AccountStack/.cloudbees/workflows/deploy.yaml@main
+    needs: [build-web]
+    with:
+      component_name: web
+      docker_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
+      environment_name: dev
+      commit_sha: ${{ cloudbees.scm.sha }}
+
+  # Deploy Accounts API to Dev
+  deploy-api-accounts-dev:
+    if: ${{ cloudbees.scm.branch == 'main' }}
+    environment: dev
+    uses: github.com/CB-AccountStack/AccountStack/.cloudbees/workflows/deploy.yaml@main
+    needs: [build-api-accounts]
+    with:
+      component_name: api-accounts
+      docker_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
+      environment_name: dev
+      commit_sha: ${{ cloudbees.scm.sha }}
+
+  # Deploy Transactions API to Dev
+  deploy-api-transactions-dev:
+    if: ${{ cloudbees.scm.branch == 'main' }}
+    environment: dev
+    uses: github.com/CB-AccountStack/AccountStack/.cloudbees/workflows/deploy.yaml@main
+    needs: [build-api-transactions]
+    with:
+      component_name: api-transactions
+      docker_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
+      environment_name: dev
+      commit_sha: ${{ cloudbees.scm.sha }}
+
+  # Deploy Insights API to Dev
+  deploy-api-insights-dev:
+    if: ${{ cloudbees.scm.branch == 'main' }}
+    environment: dev
+    uses: github.com/CB-AccountStack/AccountStack/.cloudbees/workflows/deploy.yaml@main
+    needs: [build-api-insights]
+    with:
+      component_name: api-insights
+      docker_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+      environment_name: dev
+      commit_sha: ${{ cloudbees.scm.sha }}
