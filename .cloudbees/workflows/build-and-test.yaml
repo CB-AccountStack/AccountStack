@@ -225,7 +225,7 @@ jobs:
   deploy-web-dev:
     if: ${{ cloudbees.scm.branch == 'main' }}
     environment: account-stack-dev
-    uses: github.com/CB-AccountStack/AccountStack/.cloudbees/workflows/deploy.yaml@main
+    uses: ./.cloudbees/workflows/deploy.yaml
     needs: [build-web]
     with:
       component_name: web
@@ -240,7 +240,7 @@ jobs:
   deploy-api-accounts-dev:
     if: ${{ cloudbees.scm.branch == 'main' }}
     environment: account-stack-dev
-    uses: github.com/CB-AccountStack/AccountStack/.cloudbees/workflows/deploy.yaml@main
+    uses: ./.cloudbees/workflows/deploy.yaml
     needs: [build-api-accounts]
     with:
       component_name: api-accounts
@@ -255,7 +255,7 @@ jobs:
   deploy-api-transactions-dev:
     if: ${{ cloudbees.scm.branch == 'main' }}
     environment: account-stack-dev
-    uses: github.com/CB-AccountStack/AccountStack/.cloudbees/workflows/deploy.yaml@main
+    uses: ./.cloudbees/workflows/deploy.yaml
     needs: [build-api-transactions]
     with:
       component_name: api-transactions
@@ -270,7 +270,7 @@ jobs:
   deploy-api-insights-dev:
     if: ${{ cloudbees.scm.branch == 'main' }}
     environment: account-stack-dev
-    uses: github.com/CB-AccountStack/AccountStack/.cloudbees/workflows/deploy.yaml@main
+    uses: ./.cloudbees/workflows/deploy.yaml
     needs: [build-api-insights]
     with:
       component_name: api-insights
