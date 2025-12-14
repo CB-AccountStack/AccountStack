@@ -73,15 +73,12 @@ jobs:
           # Sanitize component name for Kubernetes (lowercase, alphanumeric + hyphens)
           APP_NAME=$(echo "$COMPONENT" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
 
-          # Build path prefix: /org-name/env (only for web frontend)
-          PATH_PREFIX="/${ORG}/${NAMESPACE}"
-
           echo "========================================="
           echo "Deploying: $APP_NAME"
           echo "Environment: $NAMESPACE"
           echo "Image: $IMAGE"
           if [ "$COMPONENT" = "web" ]; then
-            echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
+            echo "URL: https://${BASE_DOMAIN}/"
           else
             echo "Internal service (ClusterIP)"
           fi
@@ -177,8 +174,6 @@ jobs:
             namespace: ${NAMESPACE}
             annotations:
               cert-manager.io/cluster-issuer: "letsencrypt-prod"
-              nginx.ingress.kubernetes.io/rewrite-target: /\$2
-              nginx.ingress.kubernetes.io/use-regex: "true"
           spec:
             ingressClassName: nginx
             tls:
@@ -189,8 +184,8 @@ jobs:
             - host: ${BASE_DOMAIN}
               http:
                 paths:
-                - path: ${PATH_PREFIX}(/|$)(.*)
-                  pathType: ImplementationSpecific
+                - path: /
+                  pathType: Prefix
                   backend:
                     service:
                       name: ${APP_NAME}
@@ -235,7 +230,7 @@ jobs:
             **Repository:** `${{ inputs.repository }}`
             **Image:** `${{ inputs.docker_image }}`
             **Commit:** `${{ inputs.commit_sha }}`
-            **Access:** ${{ inputs.component_name == 'web' && format('https://{0}/{1}/{2}', inputs.base_domain, steps.org.outputs.name, inputs.environment_name) || format('Internal ClusterIP service: {0}.{1}.svc.cluster.local', inputs.component_name, inputs.environment_name) }}
+            **Access:** ${{ inputs.component_name == 'web' && format('https://{0}/', inputs.base_domain) || format('Internal ClusterIP service: {0}.{1}.svc.cluster.local', inputs.component_name, inputs.environment_name) }}
 
             ### Deployment Details
             - Kubernetes namespace: `${{ inputs.environment_name }}`
