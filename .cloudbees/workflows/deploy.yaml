@@ -203,7 +203,9 @@ jobs:
           echo ""
           echo "========================================="
           echo "Deployment completed successfully!"
-          echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
+          if [ "$COMPONENT" = "web" ]; then
+            echo "URL: https://${BASE_DOMAIN}/"
+          fi
           echo "========================================="
 
       - name: Extract org from repository
