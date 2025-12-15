@@ -1,7 +1,7 @@
 # AccountStack + Mimic Integration
 
 **Meeting Date:** [Tomorrow]
-**Attendees:** Logan, Stuart Brown
+**Attendees:** Logan, Stu Brown
 **Subject:** Integrating AccountStack demo scenario into Mimic
 
 ---
@@ -105,7 +105,7 @@ Each CloudBees Unify environment needs its own KUBECONFIG secret:
 - **Usage:** Deploy workflow uses `guru-actions/kubeconfig@1.16` action
 
 **Current situation:**
-- Stuart has a dedicated cluster for demo purposes
+- Stu has a dedicated cluster for demo purposes
 - Can generate KUBECONFIGs for demo users
 - Currently manual: users must add KUBECONFIG to environment after Mimic creates it
 
@@ -139,7 +139,7 @@ Currently both are manual post-setup steps.
 ### 4. **Shared Infrastructure**
 - Can we provide a shared demo Kubernetes cluster KUBECONFIG?
 - Or should each user bring their own cluster?
-- Stuart has a cluster available for this purpose
+- Stu has a cluster available for this purpose
 
 ### 5. **DNS Configuration**
 - What base domain should we use? (current: `accountstack.se-main-demo.sa-demo.beescloud.com`)
@@ -294,6 +294,6 @@ flags:
 
 ## Contact
 
-**Stuart Brown**
+**Stu Brown**
 GitHub: @stubrowncloudbees
 CloudBees Org: stu-temp-tests (c7e80c5d-7f5c-4972-9683-1cf92e6ea6ce)
