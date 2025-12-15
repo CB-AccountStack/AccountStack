@@ -57,73 +57,100 @@ jobs:
           echo "Organization: $ORG"
           printf '%s' "$ORG" > "$CLOUDBEES_OUTPUTS/name"
 
-      - name: Deploy with Helm
-        kind: deploy
-        uses: docker://alpine/helm:3.17.0
+      - name: Build deployment path and parse images
+        id: path
+        uses: docker://alpine:3.20
         shell: sh
         env:
+          ORG: ${{ steps.org.outputs.name }}
           NAMESPACE: ${{ inputs.environment_name }}
-          REPOSITORY: ${{ inputs.repository }}
-          BASE_DOMAIN: ${{ inputs.base_domain }}
           WEB_IMAGE: ${{ inputs.web_image }}
           API_ACCOUNTS_IMAGE: ${{ inputs.api_accounts_image }}
           API_TRANSACTIONS_IMAGE: ${{ inputs.api_transactions_image }}
           API_INSIGHTS_IMAGE: ${{ inputs.api_insights_image }}
-          SHA: ${{ inputs.commit_sha }}
-          FM_KEY: ${{ secrets.FM_KEY }}
-          ORG: ${{ steps.org.outputs.name }}
         run: |
           set -eu
-
           # Build path prefix: /org/env
           PATH_PREFIX="/${ORG}/${NAMESPACE}"
+          printf '%s' "$PATH_PREFIX" > "$CLOUDBEES_OUTPUTS/prefix"
+          echo "Path prefix: $PATH_PREFIX"
 
-          echo "========================================="
-          echo "Deploying AccountStack with Helm"
-          echo "Environment: $NAMESPACE"
-          echo "Organization: $ORG"
-          echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
-          echo "========================================="
-          echo ""
-          echo "Images:"
-          echo "  - Web: $WEB_IMAGE"
-          echo "  - API Accounts: $API_ACCOUNTS_IMAGE"
-          echo "  - API Transactions: $API_TRANSACTIONS_IMAGE"
-          echo "  - API Insights: $API_INSIGHTS_IMAGE"
-          echo ""
+          # Parse image repositories and tags
+          # Format: repository:tag -> split into repo and tag
+          echo "${WEB_IMAGE%:*}" > "$CLOUDBEES_OUTPUTS/web_repo"
+          echo "${WEB_IMAGE##*:}" > "$CLOUDBEES_OUTPUTS/web_tag"
 
-          # Create namespace if needed
-          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+          echo "${API_ACCOUNTS_IMAGE%:*}" > "$CLOUDBEES_OUTPUTS/api_accounts_repo"
+          echo "${API_ACCOUNTS_IMAGE##*:}" > "$CLOUDBEES_OUTPUTS/api_accounts_tag"
 
-          # Deploy using Helm
-          helm upgrade --install accountstack ./helm/accountstack \
-            --namespace "$NAMESPACE" \
-            --create-namespace \
-            --set deployment.baseDomain="$BASE_DOMAIN" \
-            --set deployment.organizationName="$ORG" \
-            --set deployment.environmentName="$NAMESPACE" \
-            --set cloudbees.fmKey="${FM_KEY:-local-mode}" \
-            --set web.image.tag="${WEB_IMAGE##*:}" \
-            --set web.image.repository="${WEB_IMAGE%:*}" \
-            --set apiAccounts.image.tag="${API_ACCOUNTS_IMAGE##*:}" \
-            --set apiAccounts.image.repository="${API_ACCOUNTS_IMAGE%:*}" \
-            --set apiTransactions.image.tag="${API_TRANSACTIONS_IMAGE##*:}" \
-            --set apiTransactions.image.repository="${API_TRANSACTIONS_IMAGE%:*}" \
-            --set apiInsights.image.tag="${API_INSIGHTS_IMAGE##*:}" \
-            --set apiInsights.image.repository="${API_INSIGHTS_IMAGE%:*}" \
-            --set "web.ingress.hosts[0].host=$BASE_DOMAIN" \
-            --set "web.ingress.hosts[0].paths[0].path=$PATH_PREFIX" \
-            --set "web.ingress.hosts[0].paths[0].pathType=Prefix" \
-            --set "web.ingress.tls[0].secretName=accountstack-tls" \
-            --set "web.ingress.tls[0].hosts[0]=$BASE_DOMAIN" \
-            --wait \
-            --timeout=5m
+          echo "${API_TRANSACTIONS_IMAGE%:*}" > "$CLOUDBEES_OUTPUTS/api_transactions_repo"
+          echo "${API_TRANSACTIONS_IMAGE##*:}" > "$CLOUDBEES_OUTPUTS/api_transactions_tag"
 
-          echo ""
-          echo "========================================="
-          echo "Deployment completed successfully!"
-          echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
-          echo "========================================="
+          echo "${API_INSIGHTS_IMAGE%:*}" > "$CLOUDBEES_OUTPUTS/api_insights_repo"
+          echo "${API_INSIGHTS_IMAGE##*:}" > "$CLOUDBEES_OUTPUTS/api_insights_tag"
+
+      - name: Deploy with Helm
+        kind: deploy
+        uses: cloudbees-io/helm-install@v1
+        with:
+          chart-location: ${{ cloudbees.workspace }}/helm/accountstack
+          release-name: accountstack
+          namespace: ${{ inputs.environment_name }}
+          values: |
+            deployment:
+              baseDomain: ${{ inputs.base_domain }}
+              organizationName: ${{ steps.org.outputs.name }}
+              environmentName: ${{ inputs.environment_name }}
+
+            cloudbees:
+              fmKey: ${{ secrets.FM_KEY || 'local-mode' }}
+              environment: production
+
+            web:
+              enabled: true
+              replicaCount: 1
+              image:
+                repository: ${{ steps.path.outputs.web_repo }}
+                tag: ${{ steps.path.outputs.web_tag }}
+                pullPolicy: Always
+              ingress:
+                enabled: true
+                className: nginx
+                annotations:
+                  cert-manager.io/cluster-issuer: letsencrypt-prod
+                hosts:
+                  - host: ${{ inputs.base_domain }}
+                    paths:
+                      - path: ${{ steps.path.outputs.prefix }}
+                        pathType: Prefix
+                tls:
+                  - secretName: accountstack-tls
+                    hosts:
+                      - ${{ inputs.base_domain }}
+
+            apiAccounts:
+              enabled: true
+              replicaCount: 1
+              image:
+                repository: ${{ steps.path.outputs.api_accounts_repo }}
+                tag: ${{ steps.path.outputs.api_accounts_tag }}
+                pullPolicy: Always
+
+            apiTransactions:
+              enabled: true
+              replicaCount: 1
+              image:
+                repository: ${{ steps.path.outputs.api_transactions_repo }}
+                tag: ${{ steps.path.outputs.api_transactions_tag }}
+                pullPolicy: Always
+
+            apiInsights:
+              enabled: true
+              replicaCount: 1
+              image:
+                repository: ${{ steps.path.outputs.api_insights_repo }}
+                tag: ${{ steps.path.outputs.api_insights_tag }}
+                pullPolicy: Always
 
       - name: Publish deployment evidence
         kind: deploy
@@ -136,7 +163,7 @@ jobs:
             **Environment:** `${{ inputs.environment_name }}`
             **Repository:** `${{ inputs.repository }}`
             **Commit:** `${{ inputs.commit_sha }}`
-            **URL:** https://${{ inputs.base_domain }}/${{ steps.org.outputs.name }}/${{ inputs.environment_name }}
+            **URL:** [https://${{ inputs.base_domain }}${{ steps.path.outputs.prefix }}](https://${{ inputs.base_domain }}${{ steps.path.outputs.prefix }})
 
             ### Components Deployed
             - **Web UI:** `${{ inputs.web_image }}`
@@ -149,6 +176,7 @@ jobs:
             - Helm release: `accountstack`
             - Organization: `${{ steps.org.outputs.name }}`
             - Public ingress with SSL (cert-manager + LetsEncrypt)
-            - Path-based routing: `/${{ steps.org.outputs.name }}/${{ inputs.environment_name }}`
-            - Deployment method: Helm 3
+            - Path-based routing: `${{ steps.path.outputs.prefix }}`
+            - Deployment method: CloudBees Helm Install Action
+            - Feature Management Key: ${{ secrets.FM_KEY && '✓ from secret' || '✗ using local-mode' }}
             - Deployment successful ✓
