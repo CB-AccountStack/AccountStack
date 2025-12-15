@@ -96,6 +96,8 @@ jobs:
           chart-location: ${{ cloudbees.workspace }}/helm/accountstack
           release-name: accountstack
           namespace: ${{ inputs.environment_name }}
+          wait: true
+          timeout: 10m
           values: |
             deployment:
               baseDomain: ${{ inputs.base_domain }}
