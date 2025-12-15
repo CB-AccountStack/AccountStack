@@ -35,8 +35,7 @@ export async function initializeFeatureFlags(config: RoxConfig = {}): Promise<vo
 
   // Setup Rox with configuration
   const roxConfig: RoxSetupOptions = {
-    debugLevel: 'verbose',
-    // You can add custom properties here for targeting
+    // Note: debugLevel removed for security - prevents API key from being logged to console
     configurationFetchedHandler: (fetcherResults: FetcherResults) => {
       console.log('[FeatureFlags] Configuration fetched:', {
         hasChanges: fetcherResults.hasChanges,
