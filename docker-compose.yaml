@@ -8,6 +8,8 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+      args:
+        - VITE_ROX_API_KEY=${CLOUDBEES_FM_API_KEY}
     container_name: accountstack-web
     ports:
       - "3000:3000"
