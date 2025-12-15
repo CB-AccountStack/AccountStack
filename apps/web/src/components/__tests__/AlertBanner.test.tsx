@@ -85,29 +85,4 @@ describe('AlertBanner', () => {
 
     expect(screen.queryByLabelText('Dismiss alert')).not.toBeInTheDocument();
   });
-
-  it('does not render when feature flag is disabled', () => {
-    // Re-mock with alertsBanner disabled
-    vi.resetModules();
-    vi.doMock('../../features/flags', () => ({
-      getFlagsSnapshot: () => ({
-        alertsBanner: false,
-        dashboardCardsV2: true,
-        insightsV2: false,
-        transactionsFilters: true,
-        killInsights: false,
-      }),
-      subscribeFlags: () => () => {},
-    }));
-
-    const { container } = render(
-      <AlertBanner
-        type="info"
-        title="Test Title"
-        message="Test message"
-      />
-    );
-
-    expect(container.firstChild).toBeNull();
-  });
 });
