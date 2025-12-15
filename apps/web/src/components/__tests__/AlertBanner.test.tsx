@@ -2,15 +2,16 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import AlertBanner from '../AlertBanner';
 
-// Mock the feature flags module
+// Mock the feature flags module for useRoxFlag
 vi.mock('../../features/flags', () => ({
-  useFeatureFlags: () => ({
+  getFlagsSnapshot: () => ({
     alertsBanner: true,
     dashboardCardsV2: true,
     insightsV2: false,
     transactionsFilters: true,
     killInsights: false,
   }),
+  subscribeFlags: () => () => {}, // Return unsubscribe function
 }));
 
 describe('AlertBanner', () => {
@@ -89,13 +90,14 @@ describe('AlertBanner', () => {
     // Re-mock with alertsBanner disabled
     vi.resetModules();
     vi.doMock('../../features/flags', () => ({
-      useFeatureFlags: () => ({
+      getFlagsSnapshot: () => ({
         alertsBanner: false,
         dashboardCardsV2: true,
         insightsV2: false,
         transactionsFilters: true,
         killInsights: false,
       }),
+      subscribeFlags: () => () => {},
     }));
 
     const { container } = render(
