@@ -15,7 +15,11 @@ export default function useRoxFlag(key: string): boolean {
   const [val, setVal] = useState(() => !!getFlagsSnapshot()[key]);
 
   useEffect(() => {
-    return subscribeFlags((_reason, snap) => setVal(!!snap[key]));
+    return subscribeFlags((_reason, snap) => {
+      const newVal = !!snap[key];
+      // Only update if the value actually changed to prevent unnecessary re-renders
+      setVal((prevVal) => (prevVal !== newVal ? newVal : prevVal));
+    });
   }, [key]);
 
   return val;
