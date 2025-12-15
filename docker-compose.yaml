@@ -33,8 +33,8 @@ services:
   # ============================================================================
   api-accounts:
     build:
-      context: ./apps/api-accounts
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/api-accounts/Dockerfile
     container_name: accountstack-api-accounts
     ports:
       - "8001:8001"
@@ -66,8 +66,8 @@ services:
   # ============================================================================
   api-transactions:
     build:
-      context: ./apps/api-transactions
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/api-transactions/Dockerfile
     container_name: accountstack-api-transactions
     ports:
       - "8002:8002"
@@ -95,8 +95,8 @@ services:
   # ============================================================================
   api-insights:
     build:
-      context: ./apps/api-insights
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/api-insights/Dockerfile
     container_name: accountstack-api-insights
     ports:
       - "8003:8003"
