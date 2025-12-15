@@ -15,6 +15,8 @@ on:
 jobs:
   # Build and test Web UI
   build-web:
+    outputs:
+      ARTIFACT_ID: ${{ steps.parse-web-artifact.outputs.id }}
     steps:
       - name: Checkout
         uses: cloudbees-io/checkout@v1
@@ -92,6 +94,7 @@ jobs:
 
       - name: Build Docker image
         kind: build
+        id: kaniko-web
         uses: cloudbees-io/kaniko@v1
         with:
           context: apps/web
@@ -101,8 +104,39 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
+      - name: Parse Web artifact ID
+        id: parse-web-artifact
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          IDS: ${{ steps.kaniko-web.outputs.artifact-ids }}
+        run: |
+          set -eu
+          ART_ID=""
+          if printf '%s' "$IDS" | grep -q '^map\['; then
+            S=$(printf '%s' "$IDS" | sed -e 's/^map\[//' -e 's/\]$//')
+            FIRST=$(printf '%s' "$S" | awk '{print $1}')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          elif printf '%s' "$IDS" | grep -q '^{.*}$'; then
+            S=$(printf '%s' "$IDS" | tr -d '{}"')
+            FIRST=$(printf '%s' "$S" | tr ',' '\n' | sed -n '1p')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          else
+            FIRST=$(printf '%s' "$IDS" | tr ', ' '\n' | sed -n '1p')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          fi
+          ART_ID=$(printf '%s' "$ART_ID" | tr -d ' \t\r\n')
+          case "$ART_ID" in
+            ????????-????-????-????-????????????) : ;;
+            *) echo "Parsed artifact-id does not look like a UUID: '$ART_ID'" >&2; exit 1;;
+          esac
+          printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
+          echo "Web artifact ID: $ART_ID"
+
   # Build and test Accounts API
   build-api-accounts:
+    outputs:
+      ARTIFACT_ID: ${{ steps.parse-accounts-artifact.outputs.id }}
     steps:
       - name: Checkout
         uses: cloudbees-io/checkout@v1
@@ -135,6 +169,7 @@ jobs:
 
       - name: Build Docker image
         kind: build
+        id: kaniko-accounts
         uses: cloudbees-io/kaniko@v1
         with:
           context: .
@@ -143,8 +178,39 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
+      - name: Parse Accounts API artifact ID
+        id: parse-accounts-artifact
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          IDS: ${{ steps.kaniko-accounts.outputs.artifact-ids }}
+        run: |
+          set -eu
+          ART_ID=""
+          if printf '%s' "$IDS" | grep -q '^map\['; then
+            S=$(printf '%s' "$IDS" | sed -e 's/^map\[//' -e 's/\]$//')
+            FIRST=$(printf '%s' "$S" | awk '{print $1}')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          elif printf '%s' "$IDS" | grep -q '^{.*}$'; then
+            S=$(printf '%s' "$IDS" | tr -d '{}"')
+            FIRST=$(printf '%s' "$S" | tr ',' '\n' | sed -n '1p')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          else
+            FIRST=$(printf '%s' "$IDS" | tr ', ' '\n' | sed -n '1p')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          fi
+          ART_ID=$(printf '%s' "$ART_ID" | tr -d ' \t\r\n')
+          case "$ART_ID" in
+            ????????-????-????-????-????????????) : ;;
+            *) echo "Parsed artifact-id does not look like a UUID: '$ART_ID'" >&2; exit 1;;
+          esac
+          printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
+          echo "Accounts API artifact ID: $ART_ID"
+
   # Build and test Transactions API
   build-api-transactions:
+    outputs:
+      ARTIFACT_ID: ${{ steps.parse-transactions-artifact.outputs.id }}
     steps:
       - name: Checkout
         uses: cloudbees-io/checkout@v1
@@ -177,6 +243,7 @@ jobs:
 
       - name: Build Docker image
         kind: build
+        id: kaniko-transactions
         uses: cloudbees-io/kaniko@v1
         with:
           context: .
@@ -185,8 +252,39 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
+      - name: Parse Transactions API artifact ID
+        id: parse-transactions-artifact
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          IDS: ${{ steps.kaniko-transactions.outputs.artifact-ids }}
+        run: |
+          set -eu
+          ART_ID=""
+          if printf '%s' "$IDS" | grep -q '^map\['; then
+            S=$(printf '%s' "$IDS" | sed -e 's/^map\[//' -e 's/\]$//')
+            FIRST=$(printf '%s' "$S" | awk '{print $1}')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          elif printf '%s' "$IDS" | grep -q '^{.*}$'; then
+            S=$(printf '%s' "$IDS" | tr -d '{}"')
+            FIRST=$(printf '%s' "$S" | tr ',' '\n' | sed -n '1p')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          else
+            FIRST=$(printf '%s' "$IDS" | tr ', ' '\n' | sed -n '1p')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          fi
+          ART_ID=$(printf '%s' "$ART_ID" | tr -d ' \t\r\n')
+          case "$ART_ID" in
+            ????????-????-????-????-????????????) : ;;
+            *) echo "Parsed artifact-id does not look like a UUID: '$ART_ID'" >&2; exit 1;;
+          esac
+          printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
+          echo "Transactions API artifact ID: $ART_ID"
+
   # Build and test Insights API
   build-api-insights:
+    outputs:
+      ARTIFACT_ID: ${{ steps.parse-insights-artifact.outputs.id }}
     steps:
       - name: Checkout
         uses: cloudbees-io/checkout@v1
@@ -219,6 +317,7 @@ jobs:
 
       - name: Build Docker image
         kind: build
+        id: kaniko-insights
         uses: cloudbees-io/kaniko@v1
         with:
           context: .
@@ -226,6 +325,35 @@ jobs:
           destination: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
+
+      - name: Parse Insights API artifact ID
+        id: parse-insights-artifact
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          IDS: ${{ steps.kaniko-insights.outputs.artifact-ids }}
+        run: |
+          set -eu
+          ART_ID=""
+          if printf '%s' "$IDS" | grep -q '^map\['; then
+            S=$(printf '%s' "$IDS" | sed -e 's/^map\[//' -e 's/\]$//')
+            FIRST=$(printf '%s' "$S" | awk '{print $1}')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          elif printf '%s' "$IDS" | grep -q '^{.*}$'; then
+            S=$(printf '%s' "$IDS" | tr -d '{}"')
+            FIRST=$(printf '%s' "$S" | tr ',' '\n' | sed -n '1p')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          else
+            FIRST=$(printf '%s' "$IDS" | tr ', ' '\n' | sed -n '1p')
+            ART_ID=$(printf '%s' "$FIRST" | awk -F: '{print $NF}')
+          fi
+          ART_ID=$(printf '%s' "$ART_ID" | tr -d ' \t\r\n')
+          case "$ART_ID" in
+            ????????-????-????-????-????????????) : ;;
+            *) echo "Parsed artifact-id does not look like a UUID: '$ART_ID'" >&2; exit 1;;
+          esac
+          printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
+          echo "Insights API artifact ID: $ART_ID"
 
   # Deploy all components to Dev using Helm
   deploy-dev:
@@ -238,6 +366,10 @@ jobs:
       api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
       api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
       api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
+      api_accounts_artifact_id: ${{ needs.build-api-accounts.outputs.ARTIFACT_ID }}
+      api_transactions_artifact_id: ${{ needs.build-api-transactions.outputs.ARTIFACT_ID }}
+      api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
       base_domain: accountstack.se-main-demo.sa-demo.beescloud.com

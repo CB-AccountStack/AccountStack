@@ -17,6 +17,18 @@ on:
       api_insights_image:
         type: string
         required: true
+      web_artifact_id:
+        type: string
+        required: true
+      api_accounts_artifact_id:
+        type: string
+        required: true
+      api_transactions_artifact_id:
+        type: string
+        required: true
+      api_insights_artifact_id:
+        type: string
+        required: true
       environment_name:
         type: string
         required: true
@@ -210,7 +222,7 @@ jobs:
         kind: deploy
         uses: cloudbees-io/register-deployed-artifact@v2
         with:
-          artifact-id: accountstack-web
+          artifact-id: ${{ inputs.web_artifact_id }}
           target-environment: ${{ inputs.environment_name }}
           labels: >
             ver=${{ steps.metadata.outputs.ver }},
@@ -222,7 +234,7 @@ jobs:
         kind: deploy
         uses: cloudbees-io/register-deployed-artifact@v2
         with:
-          artifact-id: accountstack-api-accounts
+          artifact-id: ${{ inputs.api_accounts_artifact_id }}
           target-environment: ${{ inputs.environment_name }}
           labels: >
             ver=${{ steps.metadata.outputs.ver }},
@@ -234,7 +246,7 @@ jobs:
         kind: deploy
         uses: cloudbees-io/register-deployed-artifact@v2
         with:
-          artifact-id: accountstack-api-transactions
+          artifact-id: ${{ inputs.api_transactions_artifact_id }}
           target-environment: ${{ inputs.environment_name }}
           labels: >
             ver=${{ steps.metadata.outputs.ver }},
@@ -246,7 +258,7 @@ jobs:
         kind: deploy
         uses: cloudbees-io/register-deployed-artifact@v2
         with:
-          artifact-id: accountstack-api-insights
+          artifact-id: ${{ inputs.api_insights_artifact_id }}
           target-environment: ${{ inputs.environment_name }}
           labels: >
             ver=${{ steps.metadata.outputs.ver }},
