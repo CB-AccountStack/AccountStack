@@ -43,7 +43,7 @@ jobs:
         uses: cloudbees-io/publish-test-results@v1
         with:
           test-format: JUNIT
-          test-results-location: apps/web/test-results.xml
+          folder-name: apps/web
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
@@ -124,7 +124,7 @@ jobs:
         uses: cloudbees-io/publish-test-results@v1
         with:
           test-format: JUNIT
-          test-results-location: apps/api-accounts/test-results.xml
+          folder-name: apps/api-accounts
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
@@ -166,7 +166,7 @@ jobs:
         uses: cloudbees-io/publish-test-results@v1
         with:
           test-format: JUNIT
-          test-results-location: apps/api-transactions/test-results.xml
+          folder-name: apps/api-transactions
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
@@ -208,7 +208,7 @@ jobs:
         uses: cloudbees-io/publish-test-results@v1
         with:
           test-format: JUNIT
-          test-results-location: apps/api-insights/test-results.xml
+          folder-name: apps/api-insights
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
