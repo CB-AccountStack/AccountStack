@@ -1,6 +1,6 @@
 import { Wallet, TrendingUp, TrendingDown, MoreVertical } from 'lucide-react';
 import type { Account } from '../types';
-import { useFeatureFlags } from '../features/flags';
+import useRoxFlag from '../hooks/useRoxFlag';
 
 interface AccountCardProps {
   account: Account;
@@ -160,7 +160,7 @@ function AccountCardV2({ account }: AccountCardProps) {
 
 // Main component that switches between versions based on feature flag
 export default function AccountCard({ account }: AccountCardProps) {
-  const { dashboardCardsV2 } = useFeatureFlags();
+  const dashboardCardsV2 = useRoxFlag('dashboardCardsV2');
 
   return dashboardCardsV2 ? <AccountCardV2 account={account} /> : <AccountCardV1 account={account} />;
 }

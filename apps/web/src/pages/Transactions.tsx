@@ -3,11 +3,11 @@ import { CreditCard, Download, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 import TransactionList from '../components/TransactionList';
 import AlertBanner from '../components/AlertBanner';
-import { useFeatureFlags } from '../features/flags';
+import useRoxFlag from '../hooks/useRoxFlag';
 import type { Transaction } from '../types';
 
 export default function Transactions() {
-  const { transactionsFilters } = useFeatureFlags();
+  const transactionsFilters = useRoxFlag('transactionsFilters');
 
   // Fetch accounts to get user's currency
   const { data: accounts } = useQuery({

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowUpRight, ArrowDownLeft, Filter, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Transaction } from '../types';
-import { useFeatureFlags } from '../features/flags';
+import useRoxFlag from '../hooks/useRoxFlag';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -10,7 +10,7 @@ interface TransactionListProps {
 }
 
 export default function TransactionList({ transactions, currency = 'USD' }: TransactionListProps) {
-  const { transactionsFilters } = useFeatureFlags();
+  const transactionsFilters = useRoxFlag('transactionsFilters');
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');

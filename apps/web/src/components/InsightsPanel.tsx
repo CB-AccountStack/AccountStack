@@ -1,7 +1,7 @@
 import { AlertCircle, TrendingUp, TrendingDown, Lightbulb, X, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Insight } from '../types';
-import { useFeatureFlags } from '../features/flags';
+import useRoxFlag from '../hooks/useRoxFlag';
 
 interface InsightsPanelProps {
   insights: Insight[];
@@ -238,7 +238,7 @@ function InsightsPanelV2({ insights, onDismiss, onAction }: InsightsPanelProps) 
 
 // Main component that switches between versions based on feature flag
 export default function InsightsPanel({ insights, onDismiss, onAction }: InsightsPanelProps) {
-  const { insightsV2 } = useFeatureFlags();
+  const insightsV2 = useRoxFlag('insightsV2');
 
   return insightsV2 ? (
     <InsightsPanelV2 insights={insights} onDismiss={onDismiss} onAction={onAction} />

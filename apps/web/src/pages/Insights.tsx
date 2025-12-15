@@ -3,12 +3,13 @@ import { Lightbulb, AlertCircle, TrendingUp, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 import InsightsPanel from '../components/InsightsPanel';
 import AlertBanner from '../components/AlertBanner';
-import { useFeatureFlags } from '../features/flags';
+import useRoxFlag from '../hooks/useRoxFlag';
 import type { Insight } from '../types';
 
 export default function Insights() {
   const queryClient = useQueryClient();
-  const { insightsV2, killInsights } = useFeatureFlags();
+  const insightsV2 = useRoxFlag('insightsV2');
+  const killInsights = useRoxFlag('killInsights');
 
   // Fetch insights data
   const {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AlertCircle, X, Info, AlertTriangle } from 'lucide-react';
-import { useFeatureFlags } from '../features/flags';
+import useRoxFlag from '../hooks/useRoxFlag';
 
 interface AlertBannerProps {
   type?: 'info' | 'warning' | 'critical';
@@ -16,7 +16,7 @@ export default function AlertBanner({
   dismissible = true,
 }: AlertBannerProps) {
   const [dismissed, setDismissed] = useState(false);
-  const { alertsBanner } = useFeatureFlags();
+  const alertsBanner = useRoxFlag('alertsBanner');
 
   // Don't render if feature flag is disabled or banner is dismissed
   if (!alertsBanner || dismissed) {
