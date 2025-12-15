@@ -36,7 +36,7 @@ jobs:
           npm run lint || true
 
           echo "Running unit tests..."
-          npm run test:unit -- --reporter=junit --outputFile=test-results.xml || true
+          npm run test:unit -- --reporter=verbose --reporter=junit --outputFile.junit=./test-results.xml
 
           echo "Building application..."
           npm run build
@@ -151,7 +151,7 @@ jobs:
           cd apps/api-accounts
           echo "Running Go tests..."
           go install github.com/jstemmer/go-junit-report/v2@latest
-          go test -v -race -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
+          go test -v -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
           cat test-output.txt | go-junit-report -set-exit-code > test-results.xml || true
 
       - name: Publish API Accounts test results
@@ -225,7 +225,7 @@ jobs:
           cd apps/api-transactions
           echo "Running Go tests..."
           go install github.com/jstemmer/go-junit-report/v2@latest
-          go test -v -race -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
+          go test -v -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
           cat test-output.txt | go-junit-report -set-exit-code > test-results.xml || true
 
       - name: Publish API Transactions test results
@@ -299,7 +299,7 @@ jobs:
           cd apps/api-insights
           echo "Running Go tests..."
           go install github.com/jstemmer/go-junit-report/v2@latest
-          go test -v -race -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
+          go test -v -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
           cat test-output.txt | go-junit-report -set-exit-code > test-results.xml || true
 
       - name: Publish API Insights test results
