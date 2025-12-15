@@ -34,10 +34,16 @@ jobs:
           npm run lint || true
 
           echo "Running unit tests..."
-          npm run test:unit || true
+          npm run test:unit -- --reporter=junit --outputFile=test-results.xml || true
 
           echo "Building application..."
           npm run build
+
+      - name: Publish Web test results
+        uses: cloudbees-io/publish-test-results@v1
+        with:
+          test-format: JUNIT
+          test-results-location: apps/web/test-results.xml
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
@@ -110,7 +116,15 @@ jobs:
           set -eu
           cd apps/api-accounts
           echo "Running Go tests..."
-          go test -v -race -coverprofile=coverage.out ./... || true
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          go test -v -race -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
+          cat test-output.txt | go-junit-report -set-exit-code > test-results.xml || true
+
+      - name: Publish API Accounts test results
+        uses: cloudbees-io/publish-test-results@v1
+        with:
+          test-format: JUNIT
+          test-results-location: apps/api-accounts/test-results.xml
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
@@ -144,7 +158,15 @@ jobs:
           set -eu
           cd apps/api-transactions
           echo "Running Go tests..."
-          go test -v -race -coverprofile=coverage.out ./... || true
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          go test -v -race -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
+          cat test-output.txt | go-junit-report -set-exit-code > test-results.xml || true
+
+      - name: Publish API Transactions test results
+        uses: cloudbees-io/publish-test-results@v1
+        with:
+          test-format: JUNIT
+          test-results-location: apps/api-transactions/test-results.xml
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
@@ -178,7 +200,15 @@ jobs:
           set -eu
           cd apps/api-insights
           echo "Running Go tests..."
-          go test -v -race -coverprofile=coverage.out ./... || true
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          go test -v -race -coverprofile=coverage.out ./... 2>&1 | tee test-output.txt || true
+          cat test-output.txt | go-junit-report -set-exit-code > test-results.xml || true
+
+      - name: Publish API Insights test results
+        uses: cloudbees-io/publish-test-results@v1
+        with:
+          test-format: JUNIT
+          test-results-location: apps/api-insights/test-results.xml
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
