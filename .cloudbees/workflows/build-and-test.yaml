@@ -112,14 +112,6 @@ jobs:
           echo "Running Go tests..."
           go test -v -race -coverprofile=coverage.out ./... || true
 
-      - name: Build binary
-        uses: docker://golang:1.21-alpine
-        run: |
-          set -eu
-          cd apps/api-accounts
-          echo "Building Go binary..."
-          go build -o bin/accounts-api cmd/server/main.go
-
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
         with:
@@ -154,14 +146,6 @@ jobs:
           echo "Running Go tests..."
           go test -v -race -coverprofile=coverage.out ./... || true
 
-      - name: Build binary
-        uses: docker://golang:1.21-alpine
-        run: |
-          set -eu
-          cd apps/api-transactions
-          echo "Building Go binary..."
-          go build -o bin/transactions-api cmd/server/main.go
-
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
         with:
@@ -195,14 +179,6 @@ jobs:
           cd apps/api-insights
           echo "Running Go tests..."
           go test -v -race -coverprofile=coverage.out ./... || true
-
-      - name: Build binary
-        uses: docker://golang:1.21-alpine
-        run: |
-          set -eu
-          cd apps/api-insights
-          echo "Building Go binary..."
-          go build -o bin/insights-api cmd/server/main.go
 
       - name: Configure Docker credentials
         uses: cloudbees-io/configure-oci-credentials@v1
