@@ -42,8 +42,8 @@ func TestTransactionMatches(t *testing.T) {
 			name: "matches date range",
 			filters: &TransactionFilters{
 				AccountID: "acc-001",
-				StartDate: ptr(time.Date(2024, 12, 1, 0, 0, 0, 0, time.UTC)),
-				EndDate:   ptr(time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)),
+				StartDate: timePtr(time.Date(2024, 12, 1, 0, 0, 0, 0, time.UTC)),
+				EndDate:   timePtr(time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)),
 			},
 			expected: true,
 		},
@@ -51,7 +51,7 @@ func TestTransactionMatches(t *testing.T) {
 			name: "does not match date range - before start",
 			filters: &TransactionFilters{
 				AccountID: "acc-001",
-				StartDate: ptr(time.Date(2024, 12, 15, 0, 0, 0, 0, time.UTC)),
+				StartDate: timePtr(time.Date(2024, 12, 15, 0, 0, 0, 0, time.UTC)),
 			},
 			expected: false,
 		},
@@ -75,8 +75,8 @@ func TestTransactionMatches(t *testing.T) {
 			name: "matches amount range",
 			filters: &TransactionFilters{
 				AccountID: "acc-001",
-				MinAmount: ptr(-100.0),
-				MaxAmount: ptr(-10.0),
+				MinAmount: floatPtr(-100.0),
+				MaxAmount: floatPtr(-10.0),
 			},
 			expected: true,
 		},
@@ -84,7 +84,7 @@ func TestTransactionMatches(t *testing.T) {
 			name: "does not match amount range - too small",
 			filters: &TransactionFilters{
 				AccountID: "acc-001",
-				MinAmount: ptr(-40.0),
+				MinAmount: floatPtr(-40.0),
 			},
 			expected: false,
 		},
@@ -93,8 +93,8 @@ func TestTransactionMatches(t *testing.T) {
 			filters: &TransactionFilters{
 				AccountID: "acc-001",
 				Category:  "shopping",
-				MinAmount: ptr(-100.0),
-				MaxAmount: ptr(0.0),
+				MinAmount: floatPtr(-100.0),
+				MaxAmount: floatPtr(0.0),
 			},
 			expected: true,
 		},
@@ -111,6 +111,11 @@ func TestTransactionMatches(t *testing.T) {
 }
 
 // Helper function to create time pointers
-func ptr(t time.Time) *time.Time {
+func timePtr(t time.Time) *time.Time {
 	return &t
+}
+
+// Helper function to create float64 pointers
+func floatPtr(f float64) *float64 {
+	return &f
 }
