@@ -16,7 +16,19 @@ AccountStack is a realistic **account overview portal** similar to those used by
 
 ## Quick Start
 
-Run everything locally:
+### Local Development with Docker Compose
+
+1. **Set up environment** (optional - for CloudBees FM integration):
+
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit .env and add your CloudBees FM API key
+# CLOUDBEES_FM_API_KEY=your-actual-fm-key-here
+```
+
+2. **Start all services**:
 
 ```bash
 docker compose up --build
@@ -28,7 +40,9 @@ This starts:
 - Transactions API (port 8002)
 - Insights API (port 8003)
 
-Access the application at: http://localhost:3000
+3. **Access the application**: http://localhost:3000
+
+**Note**: The `.env` file is gitignored for security. Without an FM key, the app works perfectly with hardcoded default flag values.
 
 ## Components
 
@@ -40,24 +54,48 @@ Access the application at: http://localhost:3000
 
 ## Feature Management
 
-AccountStack uses **CloudBees Feature Management** for all feature flags with **real-time updates**.
+AccountStack uses **CloudBees Feature Management** for all feature flags with **fully reactive, real-time updates**.
 
-**Key Features**:
-- **Real-time flag updates** - Changes propagate instantly without reload
-- **CloudBees FM SDK** - Integrated in all components
-- **Demo-resilient** - Falls back to hardcoded defaults when offline
-- **No local FM system needed** - Flags managed in CloudBees FM
+### Key Features
 
-**How it works**:
-- All flags defined in CloudBees Feature Management
-- Components use CloudBees FM SDK (Rox)
-- Flag changes visible immediately in UI/API (no reload required)
-- Perfect for live demos - toggle flags and see instant changes
+- **🔄 Reactive Updates** - Flag changes appear instantly in the UI without page refresh or polling
+- **⚡ Zero-Latency** - CloudBees FM SDK pushes changes immediately via WebSocket
+- **🎯 Demo-Perfect** - Toggle flags in FM dashboard and watch UI update in real-time
+- **💪 Resilient** - Falls back to hardcoded defaults when offline/disconnected
+- **🔒 Secure** - API keys never exposed in browser console or logs
 
-**Offline mode**:
-- Works without internet connection
-- Uses hardcoded default values
-- No degraded experience
+### How It Works
+
+**Frontend (React)**:
+- Uses `useRoxFlag()` hook for reactive flag subscriptions
+- Components re-render automatically when flags change
+- Snapshot + listener pattern ensures instant updates
+
+**Backend (Go)**:
+- CloudBees FM SDK integrated in all APIs
+- Flag changes affect request handling in real-time
+- No restart required
+
+**Live Demo Flow**:
+1. Open AccountStack in browser
+2. Open CloudBees FM dashboard
+3. Toggle `ui.transactionsFilters` flag
+4. Watch filters appear/disappear instantly in UI 🎉
+
+### Setup
+
+**Local Development**:
+```bash
+# Optional: Connect to CloudBees FM
+cp .env.example .env
+# Add your CLOUDBEES_FM_API_KEY to .env
+docker compose up --build
+```
+
+**Production (Kubernetes)**:
+- FM key injected at deployment via Helm
+- Mounted as runtime config in `/config/fm.json`
+- No rebuild needed to change keys
 
 See [Feature Flags Reference](config/README.md) for complete flag list and code examples.
 
