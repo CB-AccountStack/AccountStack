@@ -10,6 +10,7 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_ROX_API_KEY=${CLOUDBEES_FM_API_KEY}
+        - NGINX_CONFIG=nginx.local.conf
     container_name: accountstack-web
     ports:
       - "3000:3000"
