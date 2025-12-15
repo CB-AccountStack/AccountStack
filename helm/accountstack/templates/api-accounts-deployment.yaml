@@ -48,7 +48,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: {{ include "accountstack.fullname" . }}-auth
-              key: cloudbees-api-key
+              key: cloudbees-fm-key
         - name: CLOUDBEES_FM_ENVIRONMENT
           value: {{ .Values.cloudbees.environment | quote }}
         - name: LOG_LEVEL

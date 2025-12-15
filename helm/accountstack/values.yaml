@@ -7,6 +7,15 @@ global:
   imageRegistry: ""
   imagePullSecrets: []
 
+# Deployment configuration for path-based routing
+deployment:
+  # Base domain for ingress (e.g., accountstack.se-main-demo.sa-demo.beescloud.com)
+  baseDomain: "accountstack.se-main-demo.sa-demo.beescloud.com"
+  # Organization/instance name (e.g., CB-AccountStack) - used for URL path /{org}/{env}
+  organizationName: ""
+  # Environment name (e.g., account-stack-dev) - used for URL path /{org}/{env}
+  environmentName: ""
+
 # Authentication configuration
 auth:
   # JWT secret for token signing (MUST be changed in production)
@@ -17,7 +26,9 @@ auth:
 
 # CloudBees Feature Management
 cloudbees:
-  apiKey: "dev-mode"
+  # API key for CloudBees Feature Management
+  # Can be overridden by FM_KEY secret from Unify environment
+  fmKey: "local-mode"
   environment: "production"
 
 # Web UI (React)
@@ -39,15 +50,18 @@ web:
     className: "nginx"
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    hosts:
-      - host: accountstack.example.com
-        paths:
-          - path: /
-            pathType: Prefix
-    tls:
-      - secretName: accountstack-tls
-        hosts:
-          - accountstack.example.com
+    # Hosts configuration - will be populated by workflow based on deployment.baseDomain
+    hosts: []
+    # Example:
+    # - host: accountstack.se-main-demo.sa-demo.beescloud.com
+    #   paths:
+    #     - path: /CB-AccountStack/account-stack-dev
+    #       pathType: Prefix
+    tls: []
+    # Example:
+    # - secretName: accountstack-tls
+    #   hosts:
+    #     - accountstack.se-main-demo.sa-demo.beescloud.com
   resources:
     limits:
       cpu: 500m

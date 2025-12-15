@@ -5,10 +5,16 @@ name: Deploy AccountStack
 on:
   workflow_call:
     inputs:
-      component_name:
+      web_image:
         type: string
         required: true
-      docker_image:
+      api_accounts_image:
+        type: string
+        required: true
+      api_transactions_image:
+        type: string
+        required: true
+      api_insights_image:
         type: string
         required: true
       environment_name:
@@ -24,10 +30,6 @@ on:
         type: string
         required: false
         default: "accountstack.se-main-demo.sa-demo.beescloud.com"
-      replicas:
-        type: string
-        required: false
-        default: "1"
 
 jobs:
   deploy:
@@ -42,176 +44,7 @@ jobs:
         with:
           secname: ${{ secrets.KUBECONFIG }}
 
-      - name: Create namespace if needed
-        uses: docker://alpine/kubectl:1.34.0
-        shell: sh
-        env:
-          NAMESPACE: ${{ inputs.environment_name }}
-        run: |
-          set -eu
-          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-          echo "✓ Namespace $NAMESPACE ready"
-
-      - name: Deploy to Kubernetes
-        kind: deploy
-        uses: docker://alpine/kubectl:1.34.0
-        shell: sh
-        env:
-          COMPONENT: ${{ inputs.component_name }}
-          IMAGE: ${{ inputs.docker_image }}
-          NAMESPACE: ${{ inputs.environment_name }}
-          REPOSITORY: ${{ inputs.repository }}
-          BASE_DOMAIN: ${{ inputs.base_domain }}
-          REPLICAS: ${{ inputs.replicas }}
-          SHA: ${{ inputs.commit_sha }}
-        run: |
-          set -eu
-
-          # Extract owner from repository (format: owner/repo)
-          ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
-
-          # Sanitize component name for Kubernetes (lowercase, alphanumeric + hyphens)
-          APP_NAME=$(echo "$COMPONENT" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-
-          # Build path prefix: /org/env (only for web frontend)
-          PATH_PREFIX="/${ORG}/${NAMESPACE}"
-
-          echo "========================================="
-          echo "Deploying: $APP_NAME"
-          echo "Environment: $NAMESPACE"
-          echo "Image: $IMAGE"
-          if [ "$COMPONENT" = "web" ]; then
-            echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
-          else
-            echo "Internal service (ClusterIP)"
-          fi
-          echo "========================================="
-
-          # Create Deployment
-          cat <<EOF | kubectl apply -f -
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: ${APP_NAME}
-            namespace: ${NAMESPACE}
-            labels:
-              app: ${APP_NAME}
-              component: ${COMPONENT}
-              org: ${ORG}
-              commit: ${SHA}
-          spec:
-            replicas: ${REPLICAS}
-            selector:
-              matchLabels:
-                app: ${APP_NAME}
-            template:
-              metadata:
-                labels:
-                  app: ${APP_NAME}
-                  component: ${COMPONENT}
-              spec:
-                containers:
-                - name: ${APP_NAME}
-                  image: ${IMAGE}
-                  imagePullPolicy: Always
-                  ports:
-                  - containerPort: 3000
-                    name: http
-                  env:
-                  - name: PORT
-                    value: "3000"
-                  - name: NODE_ENV
-                    value: "production"
-                  resources:
-                    requests:
-                      cpu: 50m
-                      memory: 64Mi
-                    limits:
-                      cpu: 250m
-                      memory: 256Mi
-                  livenessProbe:
-                    httpGet:
-                      path: /healthz
-                      port: 3000
-                    initialDelaySeconds: 30
-                    periodSeconds: 10
-                  readinessProbe:
-                    httpGet:
-                      path: /healthz
-                      port: 3000
-                    initialDelaySeconds: 5
-                    periodSeconds: 5
-          EOF
-
-          echo "✓ Deployment created"
-
-          # Create Service
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: ${APP_NAME}
-            namespace: ${NAMESPACE}
-            labels:
-              app: ${APP_NAME}
-          spec:
-            selector:
-              app: ${APP_NAME}
-            ports:
-            - port: 80
-              targetPort: 3000
-              protocol: TCP
-              name: http
-            type: ClusterIP
-          EOF
-
-          echo "✓ Service created"
-
-          # Create Ingress ONLY for web frontend
-          if [ "$COMPONENT" = "web" ]; then
-            cat <<EOF | kubectl apply -f -
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            name: accountstack-${NAMESPACE}
-            namespace: ${NAMESPACE}
-            annotations:
-              cert-manager.io/cluster-issuer: "letsencrypt-prod"
-          spec:
-            ingressClassName: nginx
-            tls:
-            - hosts:
-              - ${BASE_DOMAIN}
-              secretName: accountstack-tls
-            rules:
-            - host: ${BASE_DOMAIN}
-              http:
-                paths:
-                - path: ${PATH_PREFIX}
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: ${APP_NAME}
-                      port:
-                        number: 80
-          EOF
-            echo "✓ Ingress configured for web frontend"
-          else
-            echo "✓ API service deployed (internal ClusterIP only)"
-          fi
-          echo ""
-          echo "Waiting for deployment to be ready..."
-          kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=5m
-
-          echo ""
-          echo "========================================="
-          echo "Deployment completed successfully!"
-          if [ "$COMPONENT" = "web" ]; then
-            echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
-          fi
-          echo "========================================="
-
-      - name: Extract org from repository
+      - name: Extract organization from repository
         id: org
         uses: docker://alpine:3.20
         shell: sh
@@ -221,7 +54,76 @@ jobs:
           set -eu
           # Extract owner from repository (format: owner/repo)
           ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
+          echo "Organization: $ORG"
           printf '%s' "$ORG" > "$CLOUDBEES_OUTPUTS/name"
+
+      - name: Deploy with Helm
+        kind: deploy
+        uses: docker://alpine/helm:3.17.0
+        shell: sh
+        env:
+          NAMESPACE: ${{ inputs.environment_name }}
+          REPOSITORY: ${{ inputs.repository }}
+          BASE_DOMAIN: ${{ inputs.base_domain }}
+          WEB_IMAGE: ${{ inputs.web_image }}
+          API_ACCOUNTS_IMAGE: ${{ inputs.api_accounts_image }}
+          API_TRANSACTIONS_IMAGE: ${{ inputs.api_transactions_image }}
+          API_INSIGHTS_IMAGE: ${{ inputs.api_insights_image }}
+          SHA: ${{ inputs.commit_sha }}
+          FM_KEY: ${{ secrets.FM_KEY }}
+          ORG: ${{ steps.org.outputs.name }}
+        run: |
+          set -eu
+
+          # Build path prefix: /org/env
+          PATH_PREFIX="/${ORG}/${NAMESPACE}"
+
+          echo "========================================="
+          echo "Deploying AccountStack with Helm"
+          echo "Environment: $NAMESPACE"
+          echo "Organization: $ORG"
+          echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
+          echo "========================================="
+          echo ""
+          echo "Images:"
+          echo "  - Web: $WEB_IMAGE"
+          echo "  - API Accounts: $API_ACCOUNTS_IMAGE"
+          echo "  - API Transactions: $API_TRANSACTIONS_IMAGE"
+          echo "  - API Insights: $API_INSIGHTS_IMAGE"
+          echo ""
+
+          # Create namespace if needed
+          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+          # Deploy using Helm
+          helm upgrade --install accountstack ./helm/accountstack \
+            --namespace "$NAMESPACE" \
+            --create-namespace \
+            --set deployment.baseDomain="$BASE_DOMAIN" \
+            --set deployment.organizationName="$ORG" \
+            --set deployment.environmentName="$NAMESPACE" \
+            --set cloudbees.fmKey="${FM_KEY:-local-mode}" \
+            --set web.image.tag="${WEB_IMAGE##*:}" \
+            --set web.image.repository="${WEB_IMAGE%:*}" \
+            --set apiAccounts.image.tag="${API_ACCOUNTS_IMAGE##*:}" \
+            --set apiAccounts.image.repository="${API_ACCOUNTS_IMAGE%:*}" \
+            --set apiTransactions.image.tag="${API_TRANSACTIONS_IMAGE##*:}" \
+            --set apiTransactions.image.repository="${API_TRANSACTIONS_IMAGE%:*}" \
+            --set apiInsights.image.tag="${API_INSIGHTS_IMAGE##*:}" \
+            --set apiInsights.image.repository="${API_INSIGHTS_IMAGE%:*}" \
+            --set "web.ingress.hosts[0].host=$BASE_DOMAIN" \
+            --set "web.ingress.hosts[0].paths[0].path=$PATH_PREFIX" \
+            --set "web.ingress.hosts[0].paths[0].pathType=Prefix" \
+            --set "web.ingress.tls[0].secretName=accountstack-tls" \
+            --set "web.ingress.tls[0].hosts[0]=$BASE_DOMAIN" \
+            --wait \
+            --timeout=5m
+
+          echo ""
+          echo "========================================="
+          echo "Deployment completed successfully!"
+          echo "URL: https://${BASE_DOMAIN}${PATH_PREFIX}"
+          echo "========================================="
 
       - name: Publish deployment evidence
         kind: deploy
@@ -229,17 +131,24 @@ jobs:
         with:
           format: MARKDOWN
           content: |
-            ## Deployed: ${{ inputs.component_name }}
+            ## Deployed: AccountStack (All Components)
 
             **Environment:** `${{ inputs.environment_name }}`
             **Repository:** `${{ inputs.repository }}`
-            **Image:** `${{ inputs.docker_image }}`
             **Commit:** `${{ inputs.commit_sha }}`
-            **Access:** ${{ inputs.component_name == 'web' && format('https://{0}/{1}/{2}', inputs.base_domain, steps.org.outputs.name, inputs.environment_name) || format('Internal ClusterIP service: {0}.{1}.svc.cluster.local', inputs.component_name, inputs.environment_name) }}
+            **URL:** https://${{ inputs.base_domain }}/${{ steps.org.outputs.name }}/${{ inputs.environment_name }}
+
+            ### Components Deployed
+            - **Web UI:** `${{ inputs.web_image }}`
+            - **API Accounts:** `${{ inputs.api_accounts_image }}`
+            - **API Transactions:** `${{ inputs.api_transactions_image }}`
+            - **API Insights:** `${{ inputs.api_insights_image }}`
 
             ### Deployment Details
             - Kubernetes namespace: `${{ inputs.environment_name }}`
-            - Service name: `${{ inputs.component_name }}`
-            - Replicas: ${{ inputs.replicas }}
-            ${{ inputs.component_name == 'web' && '- Public ingress with SSL (cert-manager + LetsEncrypt)' || '- Internal service only (not publicly accessible)' }}
+            - Helm release: `accountstack`
+            - Organization: `${{ steps.org.outputs.name }}`
+            - Public ingress with SSL (cert-manager + LetsEncrypt)
+            - Path-based routing: `/${{ steps.org.outputs.name }}/${{ inputs.environment_name }}`
+            - Deployment method: Helm 3
             - Deployment successful ✓
