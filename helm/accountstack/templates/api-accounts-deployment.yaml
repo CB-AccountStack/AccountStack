@@ -75,14 +75,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "accountstack.fullname" . }}-api-accounts
+  name: api-accounts
   labels:
     {{- include "accountstack.labels" . | nindent 4 }}
     app.kubernetes.io/component: api-accounts
 spec:
   type: {{ .Values.apiAccounts.service.type }}
   ports:
-  - port: {{ .Values.apiAccounts.service.port }}
+  - port: 80
     targetPort: http
     protocol: TCP
     name: http

@@ -60,14 +60,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "accountstack.fullname" . }}-api-transactions
+  name: api-transactions
   labels:
     {{- include "accountstack.labels" . | nindent 4 }}
     app.kubernetes.io/component: api-transactions
 spec:
   type: {{ .Values.apiTransactions.service.type }}
   ports:
-  - port: {{ .Values.apiTransactions.service.port }}
+  - port: 80
     targetPort: http
     protocol: TCP
     name: http
