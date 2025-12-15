@@ -26,10 +26,19 @@ auth:
 
 # CloudBees Feature Management
 cloudbees:
-  # API key for CloudBees Feature Management
-  # Can be overridden by FM_KEY secret from Unify environment
+  # API key for CloudBees Feature Management (used by backend APIs)
   fmKey: "local-mode"
   environment: "production"
+
+# Feature Management for Web UI (runtime config)
+featureFlags:
+  enabled: true
+  secretName: accountstack-fm
+  secretKey: FM_KEY
+  mountPath: /usr/share/nginx/html/config
+  fileName: fm.json
+  createSecret: true
+  fmKey: ""  # Will be set by deploy workflow
 
 # Web UI (React)
 web:

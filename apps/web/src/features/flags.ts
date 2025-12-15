@@ -46,9 +46,25 @@ export async function initializeFeatureFlags(config: RoxConfig = {}): Promise<vo
   };
 
   try {
-    // Setup Rox - in development, this will use default values
-    // In production, provide apiKey via environment variable
-    const apiKey = config.apiKey || import.meta.env.VITE_ROX_API_KEY || '';
+    // Try to fetch FM key from runtime config file (deployed via Helm)
+    // Falls back to build-time env var for local development
+    let apiKey = config.apiKey || import.meta.env.VITE_ROX_API_KEY || '';
+
+    // In production (deployed via Helm), fetch from runtime config
+    if (!apiKey) {
+      try {
+        const response = await fetch('/config/fm.json');
+        if (response.ok) {
+          const fmConfig = await response.json();
+          apiKey = fmConfig.envKey || '';
+          if (apiKey) {
+            console.log('[FeatureFlags] Loaded FM key from runtime config');
+          }
+        }
+      } catch (fetchError) {
+        console.log('[FeatureFlags] No runtime config found, using defaults');
+      }
+    }
 
     if (apiKey) {
       await Rox.setup(apiKey, roxConfig);

@@ -108,6 +108,11 @@ jobs:
               fmKey: ${{ secrets.FM_KEY || 'local-mode' }}
               environment: production
 
+            featureFlags:
+              enabled: true
+              createSecret: true
+              fmKey: ${{ secrets.FM_KEY || 'local-mode' }}
+
             web:
               enabled: true
               replicaCount: 1
