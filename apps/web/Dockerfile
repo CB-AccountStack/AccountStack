@@ -18,11 +18,13 @@ WORKDIR /app
 # Accept base path as build argument
 ARG BASE_PATH=/
 ENV BASE_PATH=${BASE_PATH}
+# Set API base URL to use the same base path
+ENV VITE_API_BASE_URL=${BASE_PATH}/api
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build application with base path
+# Build application with base path and API URL
 RUN npm run build
 
 # Production image, copy all the files and run next
