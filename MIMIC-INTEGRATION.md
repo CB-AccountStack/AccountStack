@@ -29,13 +29,12 @@ AccountStack is a complete financial platform demo showcasing CloudBees Unify ca
 
 ## Current Mimic Scenario Status
 
-We've created a working Mimic scenario (`accountstack-demo.yaml` - see below) that:
+We've created a  Mimic scenario (`accountstack-demo.yaml` - see below) with issues that:
 
-✅ Creates GitHub repository from template
-✅ Creates CloudBees Unify component
-✅ Creates CloudBees Unify environment
-✅ Creates CloudBees Unify application
-✅ Creates 3 feature flags (alerts-banner, transaction-insights, dark-mode)
+Creates GitHub repository from template
+Creates CloudBees Unify component
+Creates CloudBees Unify environment
+Creates CloudBees Unify application
 
 **Current Manual Post-Setup Required:**
 1. Add `KUBECONFIG` secret to CloudBees Unify environment
@@ -198,7 +197,7 @@ Currently both are manual post-setup steps.
 
 ---
 
-## Mimic Scenario File
+## Mimic Scenario File (TYhis is wromg and we need to change it )
 
 Current scenario definition (`accountstack-demo.yaml`):
 
@@ -268,10 +267,7 @@ environments:
       - name: ENVIRONMENT
         value: "${environment}"
     create_fm_token_var: true
-    flags:
-      - alerts-banner
-      - transaction-insights
-      - dark-mode
+  
 
 applications:
   - name: "${project_name}-app"
@@ -281,13 +277,7 @@ applications:
     environments:
       - "${environment}"
 
-flags:
-  - name: alerts-banner
-    type: boolean
-  - name: transaction-insights
-    type: boolean
-  - name: dark-mode
-    type: boolean
+
 ```
 
 ---
