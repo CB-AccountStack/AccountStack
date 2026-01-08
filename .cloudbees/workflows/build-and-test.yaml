@@ -331,7 +331,7 @@ jobs:
           printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
           echo "Insights API artifact ID: $ART_ID"
 
-  # Deploy all components to Dev using Helm
+  # Deploy all components to Dev using Helm - Instance: demo
   deploy-dev:
     environment: account-stack-dev
     uses: ./.cloudbees/workflows/deploy.yaml
@@ -348,6 +348,48 @@ jobs:
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
       instance_id: demo
+      base_domain: demos.se-main-demo.sa-demo.beescloud.com
+      commit_sha: ${{ cloudbees.scm.sha }}
+    secrets: inherit
+
+  # Deploy all components to Dev using Helm - Instance: demoa
+  deploy-dev-demoa:
+    environment: account-stack-dev
+    uses: ./.cloudbees/workflows/deploy.yaml
+    needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
+    with:
+      web_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
+      api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
+      api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
+      api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
+      api_accounts_artifact_id: ${{ needs.build-api-accounts.outputs.ARTIFACT_ID }}
+      api_transactions_artifact_id: ${{ needs.build-api-transactions.outputs.ARTIFACT_ID }}
+      api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
+      environment_name: account-stack-dev
+      repository: ${{ cloudbees.scm.repository }}
+      instance_id: demoa
+      base_domain: demos.se-main-demo.sa-demo.beescloud.com
+      commit_sha: ${{ cloudbees.scm.sha }}
+    secrets: inherit
+
+  # Deploy all components to DevB using Helm - Instance: demob
+  deploy-devb-demob:
+    environment: account-stack-devb
+    uses: ./.cloudbees/workflows/deploy.yaml
+    needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
+    with:
+      web_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
+      api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
+      api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
+      api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
+      api_accounts_artifact_id: ${{ needs.build-api-accounts.outputs.ARTIFACT_ID }}
+      api_transactions_artifact_id: ${{ needs.build-api-transactions.outputs.ARTIFACT_ID }}
+      api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
+      environment_name: account-stack-devb
+      repository: ${{ cloudbees.scm.repository }}
+      instance_id: demob
       base_domain: demos.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
     secrets: inherit
