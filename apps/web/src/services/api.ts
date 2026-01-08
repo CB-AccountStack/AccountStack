@@ -9,7 +9,7 @@ import type {
 
 // Create axios instance with base configuration
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'api',
+  baseURL: 'api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

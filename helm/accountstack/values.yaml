@@ -7,14 +7,14 @@ global:
   imageRegistry: ""
   imagePullSecrets: []
 
-# Deployment configuration for path-based routing
+# Deployment configuration for subdomain-based routing
 deployment:
-  # Base domain for ingress (e.g., accountstack.se-main-demo.sa-demo.beescloud.com)
-  baseDomain: "accountstack.se-main-demo.sa-demo.beescloud.com"
-  # Organization/instance name (e.g., CB-AccountStack) - used for URL path /{org}/{env}
-  organizationName: ""
-  # Environment name (e.g., account-stack-dev) - used for URL path /{org}/{env}
-  environmentName: ""
+  # Full hostname for this instance (e.g., accountstack-demo-account-stack-dev.demos.se-main-demo.sa-demo.beescloud.com)
+  hostname: "accountstack-demo-account-stack-dev.demos.se-main-demo.sa-demo.beescloud.com"
+  # Instance ID (e.g., demo, team1, acme) - used in subdomain
+  instanceId: "demo"
+  # Environment name (e.g., account-stack-dev) - used in subdomain and as namespace
+  environmentName: "account-stack-dev"
 
 # Authentication configuration
 auth:
@@ -59,18 +59,18 @@ web:
     className: "nginx"
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    # Hosts configuration - will be populated by workflow based on deployment.baseDomain
+    # Hosts configuration - will be populated by workflow based on deployment.hostname
     hosts: []
     # Example:
-    # - host: accountstack.se-main-demo.sa-demo.beescloud.com
+    # - host: accountstack-demo-account-stack-dev.demos.se-main-demo.sa-demo.beescloud.com
     #   paths:
-    #     - path: /CB-AccountStack/account-stack-dev
+    #     - path: /
     #       pathType: Prefix
     tls: []
     # Example:
-    # - secretName: accountstack-tls
+    # - secretName: accountstack-demo-account-stack-dev-tls
     #   hosts:
-    #     - accountstack.se-main-demo.sa-demo.beescloud.com
+    #     - accountstack-demo-account-stack-dev.demos.se-main-demo.sa-demo.beescloud.com
   resources:
     limits:
       cpu: 500m

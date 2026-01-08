@@ -7,8 +7,7 @@ name: Build and Test
 on:
   push:
     branches:
-      - main
-      - develop
+      - "**"
   pull_request:
     branches:
       - main
@@ -55,44 +54,6 @@ jobs:
           username: ${{ vars.AStack_docker_user }}
           password: ${{ secrets.AStack_docker_token }}
 
-      - name: Calculate base path
-        id: basepath
-        uses: docker://alpine:3.20
-        shell: sh
-        env:
-          REPOSITORY: ${{ cloudbees.scm.repository }}
-          BRANCH: ${{ cloudbees.scm.branch }}
-        run: |
-          set -eu
-          # Extract owner from repository (format: owner/repo)
-          ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
-
-          # Map branch name to environment name
-          case "$BRANCH" in
-            main)
-              ENV_NAME="account-stack-dev"
-              ;;
-            develop)
-              ENV_NAME="account-stack-develop"
-              ;;
-            staging)
-              ENV_NAME="account-stack-staging"
-              ;;
-            production)
-              ENV_NAME="account-stack-prod"
-              ;;
-            *)
-              # For other branches, sanitize branch name for use in path
-              ENV_NAME=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//; s/-*$//')
-              ENV_NAME="account-stack-${ENV_NAME}"
-              ;;
-          esac
-
-          # Construct base path: /org/env
-          BASE_PATH="/${ORG}/${ENV_NAME}"
-          printf '%s' "$BASE_PATH" > "$CLOUDBEES_OUTPUTS/value"
-          echo "Base path: $BASE_PATH"
-
       - name: Build Docker image
         kind: build
         id: kaniko-web
@@ -101,7 +62,6 @@ jobs:
           context: apps/web
           dockerfile: apps/web/Dockerfile
           destination: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
-          build-args: BASE_PATH=${{ steps.basepath.outputs.value }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
@@ -371,9 +331,8 @@ jobs:
           printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
           echo "Insights API artifact ID: $ART_ID"
 
-  # Deploy all components to Dev using Helm
+  # Deploy all components to Dev using Helm - Instance: demo
   deploy-dev:
-    if: ${{ cloudbees.scm.branch == 'main' }}
     environment: account-stack-dev
     uses: ./.cloudbees/workflows/deploy.yaml
     needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
@@ -388,6 +347,52 @@ jobs:
       api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
-      base_domain: accountstack.se-main-demo.sa-demo.beescloud.com
+      app_name: accountstack
+      instance_id: demo
+      base_domain: demos.se-main-demo.sa-demo.beescloud.com
+      commit_sha: ${{ cloudbees.scm.sha }}
+    secrets: inherit
+
+  # Deploy all components to Dev using Helm - Instance: demoa
+  deploy-dev-demoa:
+    environment: account-stack-dev
+    uses: ./.cloudbees/workflows/deploy.yaml
+    needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
+    with:
+      web_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
+      api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
+      api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
+      api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
+      api_accounts_artifact_id: ${{ needs.build-api-accounts.outputs.ARTIFACT_ID }}
+      api_transactions_artifact_id: ${{ needs.build-api-transactions.outputs.ARTIFACT_ID }}
+      api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
+      environment_name: account-stack-dev
+      repository: ${{ cloudbees.scm.repository }}
+      app_name: accountstack
+      instance_id: demoa
+      base_domain: demos.se-main-demo.sa-demo.beescloud.com
+      commit_sha: ${{ cloudbees.scm.sha }}
+    secrets: inherit
+
+  # Deploy all components to DevB using Helm - Instance: demob
+  deploy-devb-demob:
+    environment: account-stack-devb
+    uses: ./.cloudbees/workflows/deploy.yaml
+    needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
+    with:
+      web_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
+      api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
+      api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
+      api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
+      api_accounts_artifact_id: ${{ needs.build-api-accounts.outputs.ARTIFACT_ID }}
+      api_transactions_artifact_id: ${{ needs.build-api-transactions.outputs.ARTIFACT_ID }}
+      api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
+      environment_name: account-stack-devb
+      repository: ${{ cloudbees.scm.repository }}
+      app_name: accountstack
+      instance_id: demob
+      base_domain: demos.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
     secrets: inherit
