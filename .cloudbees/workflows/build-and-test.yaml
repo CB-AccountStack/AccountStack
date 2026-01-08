@@ -347,6 +347,7 @@ jobs:
       api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
+      app_name: accountstack
       instance_id: demo
       base_domain: demos.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
@@ -368,6 +369,7 @@ jobs:
       api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
       environment_name: account-stack-dev
       repository: ${{ cloudbees.scm.repository }}
+      app_name: accountstack
       instance_id: demoa
       base_domain: demos.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
@@ -389,6 +391,7 @@ jobs:
       api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
       environment_name: account-stack-devb
       repository: ${{ cloudbees.scm.repository }}
+      app_name: accountstack
       instance_id: demob
       base_domain: demos.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
