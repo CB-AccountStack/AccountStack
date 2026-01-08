@@ -333,7 +333,6 @@ jobs:
 
   # Deploy all components to Dev using Helm
   deploy-dev:
-    if: ${{ cloudbees.scm.branch == 'main' }}
     environment: account-stack-dev
     uses: ./.cloudbees/workflows/deploy.yaml
     needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
