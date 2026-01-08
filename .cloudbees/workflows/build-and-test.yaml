@@ -335,7 +335,7 @@ jobs:
   deploy-dev:
     # CloudBees environment (must exist in platform settings)
     # This is the Kubernetes namespace where resources will be deployed
-    environment: REPLACE_ENVIRONMENT_NAME
+    environment: account-stack-dev
 
     # Reference to reusable deployment workflow
     uses: ./.cloudbees/workflows/deploy.yaml
@@ -357,7 +357,7 @@ jobs:
       api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
 
       # Environment configuration
-      environment_name: REPLACE_ENVIRONMENT_NAME    # Must match 'environment' above (K8s namespace)
+      environment_name: account-stack-dev    # Must match 'environment' above (K8s namespace)
       repository: ${{ cloudbees.scm.repository }}
       commit_sha: ${{ cloudbees.scm.sha }}
 
@@ -365,7 +365,7 @@ jobs:
       # URL will be: <app_name>-<instance_id>-<environment_name>.<base_domain>
       # Example: accountstack-demo-account-stack-dev.demos.se-main-demo.sa-demo.beescloud.com
       app_name: accountstack             # Application name prefix for subdomain
-      instance_id: REPLACE_INSTANCE_ID                  # Instance identifier (e.g., demo, team1, customer-name)
+      instance_id: demo                  # Instance identifier (e.g., demo, team1, customer-name)
       base_domain: demos.se-main-demo.sa-demo.beescloud.com  # Base domain with wildcard DNS
 
     # Inherit secrets from workflow (e.g., KUBECONFIG, FM_TOKEN)
