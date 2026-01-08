@@ -6,12 +6,10 @@ import type {
   Transaction,
   Insight,
 } from '../types';
-import { getApiBaseUrl } from '../utils/basePath';
 
 // Create axios instance with base configuration
-// Uses runtime base path detection to support multiple deployment environments
 const apiClient: AxiosInstance = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL: 'api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

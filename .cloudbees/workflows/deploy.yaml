@@ -38,10 +38,14 @@ on:
       repository:
         type: string
         required: true
+      instance_id:
+        type: string
+        required: false
+        default: "demo"
       base_domain:
         type: string
         required: false
-        default: "accountstack.se-main-demo.sa-demo.beescloud.com"
+        default: "demos.se-main-demo.sa-demo.beescloud.com"
 
 jobs:
   deploy:
@@ -56,36 +60,24 @@ jobs:
         with:
           secname: ${{ secrets.KUBECONFIG }}
 
-      - name: Extract organization from repository
-        id: org
+      - name: Build subdomain hostname and parse images
+        id: hostname
         uses: docker://alpine:3.20
         shell: sh
         env:
-          REPOSITORY: ${{ inputs.repository }}
-        run: |
-          set -eu
-          # Extract owner from repository (format: owner/repo)
-          ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
-          echo "Organization: $ORG"
-          printf '%s' "$ORG" > "$CLOUDBEES_OUTPUTS/name"
-
-      - name: Build deployment path and parse images
-        id: path
-        uses: docker://alpine:3.20
-        shell: sh
-        env:
-          ORG: ${{ steps.org.outputs.name }}
+          INSTANCE_ID: ${{ inputs.instance_id }}
           NAMESPACE: ${{ inputs.environment_name }}
+          BASE_DOMAIN: ${{ inputs.base_domain }}
           WEB_IMAGE: ${{ inputs.web_image }}
           API_ACCOUNTS_IMAGE: ${{ inputs.api_accounts_image }}
           API_TRANSACTIONS_IMAGE: ${{ inputs.api_transactions_image }}
           API_INSIGHTS_IMAGE: ${{ inputs.api_insights_image }}
         run: |
           set -eu
-          # Build path prefix: /org/env
-          PATH_PREFIX="/${ORG}/${NAMESPACE}"
-          printf '%s' "$PATH_PREFIX" > "$CLOUDBEES_OUTPUTS/prefix"
-          echo "Path prefix: $PATH_PREFIX"
+          # Build subdomain hostname: accountstack-<id>-<env>.demos.se-main-demo.sa-demo.beescloud.com
+          HOSTNAME="accountstack-${INSTANCE_ID}-${NAMESPACE}.${BASE_DOMAIN}"
+          printf '%s' "$HOSTNAME" > "$CLOUDBEES_OUTPUTS/name"
+          echo "Hostname: $HOSTNAME"
 
           # Parse image repositories and tags
           # Format: repository:tag -> split into repo and tag
@@ -112,8 +104,8 @@ jobs:
           timeout: 10m
           values: |
             deployment:
-              baseDomain: ${{ inputs.base_domain }}
-              organizationName: ${{ steps.org.outputs.name }}
+              hostname: ${{ steps.hostname.outputs.name }}
+              instanceId: ${{ inputs.instance_id }}
               environmentName: ${{ inputs.environment_name }}
 
             cloudbees:
@@ -129,8 +121,8 @@ jobs:
               enabled: true
               replicaCount: 1
               image:
-                repository: ${{ steps.path.outputs.web_repo }}
-                tag: ${{ steps.path.outputs.web_tag }}
+                repository: ${{ steps.hostname.outputs.web_repo }}
+                tag: ${{ steps.hostname.outputs.web_tag }}
                 pullPolicy: Always
               ingress:
                 enabled: true
@@ -138,37 +130,37 @@ jobs:
                 annotations:
                   cert-manager.io/cluster-issuer: letsencrypt-prod
                 hosts:
-                  - host: ${{ inputs.base_domain }}
+                  - host: ${{ steps.hostname.outputs.name }}
                     paths:
-                      - path: ${{ steps.path.outputs.prefix }}
+                      - path: /
                         pathType: Prefix
                 tls:
-                  - secretName: accountstack-tls
+                  - secretName: accountstack-${{ inputs.instance_id }}-${{ inputs.environment_name }}-tls
                     hosts:
-                      - ${{ inputs.base_domain }}
+                      - ${{ steps.hostname.outputs.name }}
 
             apiAccounts:
               enabled: true
               replicaCount: 1
               image:
-                repository: ${{ steps.path.outputs.api_accounts_repo }}
-                tag: ${{ steps.path.outputs.api_accounts_tag }}
+                repository: ${{ steps.hostname.outputs.api_accounts_repo }}
+                tag: ${{ steps.hostname.outputs.api_accounts_tag }}
                 pullPolicy: Always
 
             apiTransactions:
               enabled: true
               replicaCount: 1
               image:
-                repository: ${{ steps.path.outputs.api_transactions_repo }}
-                tag: ${{ steps.path.outputs.api_transactions_tag }}
+                repository: ${{ steps.hostname.outputs.api_transactions_repo }}
+                tag: ${{ steps.hostname.outputs.api_transactions_tag }}
                 pullPolicy: Always
 
             apiInsights:
               enabled: true
               replicaCount: 1
               image:
-                repository: ${{ steps.path.outputs.api_insights_repo }}
-                tag: ${{ steps.path.outputs.api_insights_tag }}
+                repository: ${{ steps.hostname.outputs.api_insights_repo }}
+                tag: ${{ steps.hostname.outputs.api_insights_tag }}
                 pullPolicy: Always
 
       - name: Calculate version and metadata
@@ -275,9 +267,10 @@ jobs:
             ## Deployed: AccountStack (All Components)
 
             **Environment:** `${{ inputs.environment_name }}`
+            **Instance ID:** `${{ inputs.instance_id }}`
             **Repository:** `${{ inputs.repository }}`
             **Commit:** `${{ inputs.commit_sha }}`
-            **URL:** [https://${{ inputs.base_domain }}${{ steps.path.outputs.prefix }}](https://${{ inputs.base_domain }}${{ steps.path.outputs.prefix }})
+            **URL:** [https://${{ steps.hostname.outputs.name }}](https://${{ steps.hostname.outputs.name }})
 
             ### Components Deployed
             - **Web UI:** `${{ inputs.web_image }}`
@@ -288,9 +281,9 @@ jobs:
             ### Deployment Details
             - Kubernetes namespace: `${{ inputs.environment_name }}`
             - Helm release: `accountstack`
-            - Organization: `${{ steps.org.outputs.name }}`
+            - Hostname: `${{ steps.hostname.outputs.name }}`
             - Public ingress with SSL (cert-manager + LetsEncrypt)
-            - Path-based routing: `${{ steps.path.outputs.prefix }}`
+            - Host-based routing (subdomain)
             - Deployment method: CloudBees Helm Install Action
             - Feature Management Key: ${{ secrets.FM_TOKEN && '✓ from secret' || '✗ using local-mode' }}
             - Deployment successful ✓

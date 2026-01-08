@@ -2,16 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script>
-      // Detect base path and set <base> tag before any resources load
-      (function() {
-        var pathname = window.location.pathname;
-        var match = pathname.match(/^\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+/);
-        var basePath = match ? match[0] + '/' : '/';
-        document.write('<base href="' + basePath + '">');
-      })();
-    </script>
-    <link rel="icon" type="image/svg+xml" href="vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AccountStack - Smart Financial Management</title>
     <meta name="description" content="Modern account and transaction management platform powered by CloudBees Feature Management" />
