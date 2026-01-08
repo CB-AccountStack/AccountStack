@@ -51,8 +51,8 @@ jobs:
         uses: cloudbees-io/configure-oci-credentials@v1
         with:
           registry: https://index.docker.io/v1/
-          username: ${{ vars.AStack_docker_user }}
-          password: ${{ secrets.AStack_docker_token }}
+          username: ${{ vars.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build Docker image
         kind: build
@@ -61,7 +61,7 @@ jobs:
         with:
           context: apps/web
           dockerfile: apps/web/Dockerfile
-          destination: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
+          destination: ${{ vars.DOCKER_USER }}/accountstack-web:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
@@ -130,8 +130,8 @@ jobs:
         uses: cloudbees-io/configure-oci-credentials@v1
         with:
           registry: https://index.docker.io/v1/
-          username: ${{ vars.AStack_docker_user }}
-          password: ${{ secrets.AStack_docker_token }}
+          username: ${{ vars.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build Docker image
         kind: build
@@ -140,7 +140,7 @@ jobs:
         with:
           context: .
           dockerfile: apps/api-accounts/Dockerfile
-          destination: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
+          destination: ${{ vars.DOCKER_USER }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
@@ -209,8 +209,8 @@ jobs:
         uses: cloudbees-io/configure-oci-credentials@v1
         with:
           registry: https://index.docker.io/v1/
-          username: ${{ vars.AStack_docker_user }}
-          password: ${{ secrets.AStack_docker_token }}
+          username: ${{ vars.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build Docker image
         kind: build
@@ -219,7 +219,7 @@ jobs:
         with:
           context: .
           dockerfile: apps/api-transactions/Dockerfile
-          destination: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
+          destination: ${{ vars.DOCKER_USER }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
@@ -288,8 +288,8 @@ jobs:
         uses: cloudbees-io/configure-oci-credentials@v1
         with:
           registry: https://index.docker.io/v1/
-          username: ${{ vars.AStack_docker_user }}
-          password: ${{ secrets.AStack_docker_token }}
+          username: ${{ vars.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build Docker image
         kind: build
@@ -298,7 +298,7 @@ jobs:
         with:
           context: .
           dockerfile: apps/api-insights/Dockerfile
-          destination: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+          destination: ${{ vars.DOCKER_USER }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
@@ -345,10 +345,10 @@ jobs:
 
     with:
       # Docker images to deploy (built in previous jobs)
-      web_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
-      api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
-      api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
-      api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+      web_image: ${{ vars.DOCKER_USER }}/accountstack-web:${{ cloudbees.scm.sha }}
+      api_accounts_image: ${{ vars.DOCKER_USER }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
+      api_transactions_image: ${{ vars.DOCKER_USER }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
+      api_insights_image: ${{ vars.DOCKER_USER }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
 
       # Artifact IDs for deployment tracking
       web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
