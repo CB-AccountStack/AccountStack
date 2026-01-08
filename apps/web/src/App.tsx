@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Insights from './pages/Insights';
+import { detectBasePath } from './utils/basePath';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -20,8 +21,9 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Get base path from Vite's import.meta.env.BASE_URL (set via vite.config.ts base option)
-  const basename = import.meta.env.BASE_URL;
+  // Detect base path at runtime from browser URL
+  // This allows the same build to work in multiple deployment environments
+  const basename = detectBasePath();
 
   return (
     <QueryClientProvider client={queryClient}>

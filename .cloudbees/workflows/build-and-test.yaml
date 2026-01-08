@@ -55,44 +55,6 @@ jobs:
           username: ${{ vars.AStack_docker_user }}
           password: ${{ secrets.AStack_docker_token }}
 
-      - name: Calculate base path
-        id: basepath
-        uses: docker://alpine:3.20
-        shell: sh
-        env:
-          REPOSITORY: ${{ cloudbees.scm.repository }}
-          BRANCH: ${{ cloudbees.scm.branch }}
-        run: |
-          set -eu
-          # Extract owner from repository (format: owner/repo)
-          ORG=$(echo "$REPOSITORY" | cut -d'/' -f1)
-
-          # Map branch name to environment name
-          case "$BRANCH" in
-            main)
-              ENV_NAME="account-stack-dev"
-              ;;
-            develop)
-              ENV_NAME="account-stack-develop"
-              ;;
-            staging)
-              ENV_NAME="account-stack-staging"
-              ;;
-            production)
-              ENV_NAME="account-stack-prod"
-              ;;
-            *)
-              # For other branches, sanitize branch name for use in path
-              ENV_NAME=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//; s/-*$//')
-              ENV_NAME="account-stack-${ENV_NAME}"
-              ;;
-          esac
-
-          # Construct base path: /org/env
-          BASE_PATH="/${ORG}/${ENV_NAME}"
-          printf '%s' "$BASE_PATH" > "$CLOUDBEES_OUTPUTS/value"
-          echo "Base path: $BASE_PATH"
-
       - name: Build Docker image
         kind: build
         id: kaniko-web
@@ -101,7 +63,6 @@ jobs:
           context: apps/web
           dockerfile: apps/web/Dockerfile
           destination: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
-          build-args: BASE_PATH=${{ steps.basepath.outputs.value }}
           labels: |
             org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
 
