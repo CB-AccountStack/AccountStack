@@ -331,68 +331,42 @@ jobs:
           printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
           echo "Insights API artifact ID: $ART_ID"
 
-  # Deploy all components to Dev using Helm - Instance: demo
+  # Deploy all components to Dev environment using Helm
   deploy-dev:
+    # CloudBees environment (must exist in platform settings)
+    # This is the Kubernetes namespace where resources will be deployed
     environment: account-stack-dev
-    uses: ./.cloudbees/workflows/deploy.yaml
-    needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
-    with:
-      web_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
-      api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
-      api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
-      api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
-      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
-      api_accounts_artifact_id: ${{ needs.build-api-accounts.outputs.ARTIFACT_ID }}
-      api_transactions_artifact_id: ${{ needs.build-api-transactions.outputs.ARTIFACT_ID }}
-      api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
-      environment_name: account-stack-dev
-      repository: ${{ cloudbees.scm.repository }}
-      app_name: accountstack
-      instance_id: demo
-      base_domain: demos.se-main-demo.sa-demo.beescloud.com
-      commit_sha: ${{ cloudbees.scm.sha }}
-    secrets: inherit
 
-  # Deploy all components to Dev using Helm - Instance: demoa
-  deploy-dev-demoa:
-    environment: account-stack-dev
+    # Reference to reusable deployment workflow
     uses: ./.cloudbees/workflows/deploy.yaml
-    needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
-    with:
-      web_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
-      api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
-      api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
-      api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
-      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
-      api_accounts_artifact_id: ${{ needs.build-api-accounts.outputs.ARTIFACT_ID }}
-      api_transactions_artifact_id: ${{ needs.build-api-transactions.outputs.ARTIFACT_ID }}
-      api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
-      environment_name: account-stack-dev
-      repository: ${{ cloudbees.scm.repository }}
-      app_name: accountstack
-      instance_id: demoa
-      base_domain: demos.se-main-demo.sa-demo.beescloud.com
-      commit_sha: ${{ cloudbees.scm.sha }}
-    secrets: inherit
 
-  # Deploy all components to DevB using Helm - Instance: demob
-  deploy-devb-demob:
-    environment: account-stack-devb
-    uses: ./.cloudbees/workflows/deploy.yaml
+    # Wait for all build jobs to complete before deploying
     needs: [build-web, build-api-accounts, build-api-transactions, build-api-insights]
+
     with:
+      # Docker images to deploy (built in previous jobs)
       web_image: ${{ vars.AStack_docker_user }}/accountstack-web:${{ cloudbees.scm.sha }}
       api_accounts_image: ${{ vars.AStack_docker_user }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
       api_transactions_image: ${{ vars.AStack_docker_user }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
       api_insights_image: ${{ vars.AStack_docker_user }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
+
+      # Artifact IDs for deployment tracking
       web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
       api_accounts_artifact_id: ${{ needs.build-api-accounts.outputs.ARTIFACT_ID }}
       api_transactions_artifact_id: ${{ needs.build-api-transactions.outputs.ARTIFACT_ID }}
       api_insights_artifact_id: ${{ needs.build-api-insights.outputs.ARTIFACT_ID }}
-      environment_name: account-stack-devb
+
+      # Environment configuration
+      environment_name: account-stack-dev    # Must match 'environment' above (K8s namespace)
       repository: ${{ cloudbees.scm.repository }}
-      app_name: accountstack
-      instance_id: demob
-      base_domain: demos.se-main-demo.sa-demo.beescloud.com
       commit_sha: ${{ cloudbees.scm.sha }}
+
+      # Subdomain configuration
+      # URL will be: <app_name>-<instance_id>-<environment_name>.<base_domain>
+      # Example: accountstack-demo-account-stack-dev.demos.se-main-demo.sa-demo.beescloud.com
+      app_name: accountstack             # Application name prefix for subdomain
+      instance_id: demo                  # Instance identifier (e.g., demo, team1, customer-name)
+      base_domain: demos.se-main-demo.sa-demo.beescloud.com  # Base domain with wildcard DNS
+
+    # Inherit secrets from workflow (e.g., KUBECONFIG, FM_TOKEN)
     secrets: inherit
