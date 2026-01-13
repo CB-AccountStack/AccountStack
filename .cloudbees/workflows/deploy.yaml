@@ -50,10 +50,7 @@ on:
         type: string
         required: false
         default: "demos.se-main-demo.sa-demo.beescloud.com"
-      fm_key:
-        type: string
-        required: false
-        default: " "
+      
 
 jobs:
   deploy:
