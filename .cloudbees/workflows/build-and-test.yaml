@@ -345,7 +345,7 @@ jobs:
 
     with:
       # Docker images to deploy (built in previous jobs)
-      web_image: ${{ vars.DOCKER_USER }}/accountstack-web:${{ cloudbees.scm.sha }}
+      web_image: v/accountstack-web:${{ cloudbees.scm.sha }}
       api_accounts_image: ${{ vars.DOCKER_USER }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
       api_transactions_image: ${{ vars.DOCKER_USER }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
       api_insights_image: ${{ vars.DOCKER_USER }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
@@ -367,6 +367,7 @@ jobs:
       app_name: accountstack             # Application name prefix for subdomain
       instance_id: demo                  # Instance identifier (e.g., demo, team1, customer-name)
       base_domain: demos.se-main-demo.sa-demo.beescloud.com  # Base domain with wildcard DNS
+      fm_key: fookey
 
     # Inherit secrets from workflow (e.g., KUBECONFIG, FM_TOKEN)
     secrets: inherit
