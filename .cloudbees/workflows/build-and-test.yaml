@@ -367,7 +367,7 @@ jobs:
       app_name: accountstack             # Application name prefix for subdomain
       instance_id: demo                  # Instance identifier (e.g., demo, team1, customer-name)
       base_domain: demos.se-main-demo.sa-demo.beescloud.com  # Base domain with wildcard DNS
-      fm_key: ${{ secrets.FM_KEY }}
+      fm_key: ${{ secrets.FM_TOKEN }}
 
     # Inherit secrets from workflow (e.g., KUBECONFIG, FM_TOKEN)
     secrets: inherit
