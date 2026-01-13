@@ -346,7 +346,7 @@ jobs:
 
     with:
       # Docker images to deploy (built in previous jobs)
-      web_image: accountstack-web:${{ cloudbees.scm.sha }}
+      web_image: ${{ vars.DOCKER_USER }}/accountstack-web:${{ cloudbees.scm.sha }}
       api_accounts_image: ${{ vars.DOCKER_USER }}/accountstack-api-accounts:${{ cloudbees.scm.sha }}
       api_transactions_image: ${{ vars.DOCKER_USER }}/accountstack-api-transactions:${{ cloudbees.scm.sha }}
       api_insights_image: ${{ vars.DOCKER_USER }}/accountstack-api-insights:${{ cloudbees.scm.sha }}
