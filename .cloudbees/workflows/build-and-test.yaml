@@ -371,3 +371,4 @@ jobs:
 
     # Inherit secrets from workflow (e.g., KUBECONFIG, FM_TOKEN)
     secrets: inherit
+    vars: inherit
