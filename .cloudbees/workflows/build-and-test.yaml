@@ -4,6 +4,7 @@ kind: workflow
 name: Build and Test
 
 # Trigger rebuild
+
 on:
   push:
     branches:
@@ -11,6 +12,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   # Build and test Web UI
