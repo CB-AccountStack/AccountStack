@@ -49,7 +49,7 @@ on:
       base_domain:
         type: string
         required: false
-        default: "demos.se-main-demo.sa-demo.beescloud.com"
+        default: "STACK_BASE_NAME_NOT_SET"
       
 
 jobs:
